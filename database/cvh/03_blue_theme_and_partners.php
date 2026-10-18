@@ -42,7 +42,7 @@ DB::transaction(function () use ($now) {
 
     /* ---------- Restore phase-2 navigation (an earlier re-run of 01 had reset it) ---------- */
     $nav = [
-        ['Home', '/'], ['Courses', '/classes'], ['Projects', '/bundles'], ['Innovations', '/pages/innovations'],
+        ['Home', '/'], ['Courses', '/classes'], ['Projects', '/bundles'], ['Innovations', '/pages/innovations'], ['Forums', '/forums'],
         ['Instructors', '/instructors'], ['Blog', '/blog'], ['About', '/pages/about'],
     ];
     $header = DB::table('theme_header_footer_translations')->where('theme_header_footer_id', 1)->where('locale', 'en')->first();
