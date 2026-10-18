@@ -233,7 +233,7 @@ DB::transaction(function () use ($now) {
         $c['main_content']['secondary_button'] = ['label' => 'Meet Our Instructors', 'icon' => 'bul-teacher', 'url' => '/instructors'];
         $c['main_content']['highlight_words'] = ['cvhW1' => 'Food Safety', 'cvhW2' => 'Agribusiness', 'cvhW3' => 'Nutrition', 'cvhW4' => 'Aquaculture'];
         $c['students_widget'] = ['title' => 'Join 257+ learners in the CVH community', 'url' => '/register'];
-        $c['image_content']['image'] = CVH . '/landing/hero_image.jpg';
+        $c['image_content']['image'] = CVH . '/landing/hero_image_v2.jpg';
         $c['image_content']['overlay_image'] = CVH . '/landing/hero_overlay.png';
         $c['image_content']['spinning_image'] = CVH . '/landing/hero_badge.png';
         $c['students_widget_avatars'] = [];
