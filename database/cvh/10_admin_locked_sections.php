@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 const ADMIN_ROLE_ID = 2;
+// Sections that also guard pages which still work, so they are never hidden
+// (admin_themes_create is required by the Themes list/edit pages, not only "New theme").
+const NEVER_HIDE = ['admin_themes_create'];
 $undoFile = storage_path('app/cvh_hidden_admin_sections.json');
 $mode = $argv[1] ?? '--report';
 
@@ -115,6 +118,8 @@ foreach ($sectionLinks as $section => $paths) {              // hide a parent gr
         $hide[$section] = $hide[$section] ?? reset($locked);
     }
 }
+
+$hide = array_diff_key($hide, array_flip(NEVER_HIDE));
 
 if (!$locked) {
     exit("No admin pages redirect to a licence page. Nothing to hide.\n");
