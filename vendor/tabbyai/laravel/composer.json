@@ -1,0 +1,27 @@
+{
+  "name": "tabbyai/laravel",
+  "description": "Laravel package for integrating with Tabby.",
+  "keywords": [
+    "tabby",
+    "sdk",
+    "package",
+    "integration",
+    "api",
+    "payment gateway",
+    "payment"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Sultan Algarbi",
+      "email": "sultanye@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Tabby\\": "src/"
+    }
+  },
+  "version": "2.1.1"
+}

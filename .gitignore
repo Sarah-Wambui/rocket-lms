@@ -1,0 +1,46 @@
+/node_modules
+/public/hot
+/public/storage
+/public/images
+/public/bin
+/public/debug_paytabs.log
+/.idea
+/.vscode
+
+# Secrets — never commit (copy .env.example to .env on each server)
+.env
+.env.*
+!.env.example
+.env.backup
+/firebase-auth.json
+/storage/*.key
+
+# Uploaded files: keep only the site's own assets (theme, landing builder, CVH, default images);
+# per-user upload folders stay on the server.
+/public/store/*
+!/public/store/.htaccess
+!/public/store/1/
+!/public/store/cvh/
+!/public/store/themes/
+!/public/store/landing_builder/
+
+# Runtime files written by Laravel
+/storage/logs/*
+/storage/debugbar/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/cache/*
+/storage/framework/testing/*
+/storage/framework/laravel-excel
+/storage/app/public/*
+!/storage/**/.gitignore
+/bootstrap/cache/*.php
+
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# Stray log files
+*.log
