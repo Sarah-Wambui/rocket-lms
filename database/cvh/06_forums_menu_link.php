@@ -1,7 +1,7 @@
 <?php
 /**
  * CVH Africa — add "Forums" to the main menu (after "Innovations").
- * Note: /forums shows "Access Not Allowed" until the Forum feature (Plugins Bundle) is enabled.
+ * Links to the in-house community forum at /community (see 09_community_forum.php).
  * Run from the project root:  php database/cvh/06_forums_menu_link.php   (re-runnable)
  */
 
@@ -36,13 +36,13 @@ DB::transaction(function () {
     // Header menu
     $header = DB::table('theme_header_footer_translations')->where('theme_header_footer_id', 1)->where('locale', 'en')->first();
     $c = json_decode($header->content, true);
-    $c['specific_links'] = insertLinkAfter($c['specific_links'] ?? [], '/pages/innovations', ['title' => 'Forums', 'url' => '/forums'], 'url');
+    $c['specific_links'] = insertLinkAfter($c['specific_links'] ?? [], '/pages/innovations', ['title' => 'Forums', 'url' => '/community'], 'url');
     DB::table('theme_header_footer_translations')->where('id', $header->id)->update(['content' => json_encode($c)]);
 
     // Legacy navbar_links setting (used by some views/mobile), kept in sync with renumbered order
     $settingId = DB::table('settings')->where('name', 'navbar_links')->value('id');
     $row = DB::table('setting_translations')->where('setting_id', $settingId)->where('locale', 'en')->first();
-    $links = insertLinkAfter(json_decode($row->value, true) ?: [], '/pages/innovations', ['title' => 'Forums', 'link' => '/forums', 'order' => '0'], 'link');
+    $links = insertLinkAfter(json_decode($row->value, true) ?: [], '/pages/innovations', ['title' => 'Forums', 'link' => '/community', 'order' => '0'], 'link');
     $i = 1;
     foreach ($links as $k => $l) {
         $links[$k]['order'] = (string)$i++;

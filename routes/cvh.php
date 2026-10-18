@@ -7,6 +7,22 @@ use Illuminate\Support\Facades\Route;
 | Same middleware as the template's main "Web" route group.
 */
 Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impersonate', 'share', 'check_maintenance', 'check_restriction']], function () {
+    // Innovations showcase
     Route::get('/innovations', 'CvhInnovationsController@index');
     Route::get('/innovations/{slug}', 'CvhInnovationsController@show');
+
+    // Community forum (in-house; the template's paid forum at /forums is untouched)
+    Route::group(['prefix' => 'community'], function () {
+        Route::get('/', 'CvhCommunityController@index');
+        Route::get('/topic/{id}', 'CvhCommunityController@topic')->where('id', '[0-9]+');
+
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::get('/new', 'CvhCommunityController@create');
+            Route::post('/topics', 'CvhCommunityController@store')->middleware('throttle:5,1');
+            Route::post('/topic/{id}/reply', 'CvhCommunityController@reply')->where('id', '[0-9]+')->middleware('throttle:10,1');
+            Route::post('/moderate', 'CvhCommunityController@moderate');
+        });
+
+        Route::get('/{slug}', 'CvhCommunityController@category');
+    });
 });
