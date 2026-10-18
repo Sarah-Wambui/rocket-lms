@@ -573,3 +573,6 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 Route::get('/purchase-code', [PurchaseCodeController::class, 'show'])->name('purchase.code.show');
 Route::post('/purchase-code', [PurchaseCodeController::class, 'store'])->name('purchase.code.store');
 
+
+// CVH Africa custom pages
+require __DIR__ . '/cvh.php';
