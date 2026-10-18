@@ -39,6 +39,13 @@ function updateLandingComponent(int $id, callable $mutate): void
         ->update(['content' => json_encode($mutate(json_decode($row->content, true)))]);
 }
 
+// True when a links array was already set up by these CVH scripts (keys start with "cvh"),
+// so re-running this file never overwrites navigation that later scripts or the admin changed.
+function hasCvhKeys($links): bool
+{
+    return is_array($links) && (bool)array_filter(array_keys($links), fn($k) => str_starts_with((string)$k, 'cvh'));
+}
+
 function key5(): string
 {
     return substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 5);
@@ -124,7 +131,7 @@ DB::transaction(function () use ($now) {
         'additional_information_subtitle' => "Email or call us and our team will get back to you.",
     ]));
 
-    updateSetting('navbar_links', fn($v) => [
+    updateSetting('navbar_links', fn($v) => hasCvhKeys($v) ? $v : [
         'cvh01' => ['title' => 'Home', 'link' => '/', 'order' => '1'],
         'cvh02' => ['title' => 'Courses', 'link' => '/classes', 'order' => '2'],
         'cvh03' => ['title' => 'Instructors', 'link' => '/instructors', 'order' => '3'],
@@ -139,7 +146,7 @@ DB::transaction(function () use ($now) {
         $c['top_navbar']['email'] = 'cvh@fspnafrica.org';
         $c['top_navbar']['link_1'] = ['title' => 'Sign In', 'url' => '/login'];
         $c['top_navbar']['link_2'] = ['title' => 'Sign Up', 'url' => '/register'];
-        $c['specific_links'] = [
+        if (!hasCvhKeys($c['specific_links'] ?? null)) $c['specific_links'] = [
             'cvhA1' => ['title' => 'Home', 'url' => '/'],
             'cvhA2' => ['title' => 'Courses', 'url' => '/classes'],
             'cvhA3' => ['title' => 'Instructors', 'url' => '/instructors'],
@@ -195,7 +202,7 @@ DB::transaction(function () use ($now) {
         $c['links_1_section_title'] = 'Important Links';
         $c['links_2_section_title'] = 'Course Categories';
         $c['copyright_text'] = '© 2025 cvh.africa. All rights reserved.';
-        $c['specific_links'] = [
+        if (!hasCvhKeys($c['specific_links'] ?? null)) $c['specific_links'] = [
             'cvhF1' => ['title' => 'About us', 'url' => '/pages/about'],
             'cvhF2' => ['title' => 'Courses', 'url' => '/classes'],
             'cvhF3' => ['title' => 'Instructors', 'url' => '/instructors'],
@@ -218,7 +225,7 @@ DB::transaction(function () use ($now) {
 
     /* ---------- Homepage sections (landing 1) ---------- */
     updateLandingComponent(1, function ($c) {
-        $c['upper_cta'] = ['badge_text' => 'Live', 'main_text' => 'Upcoming: HD4A Agroinnovators Mentorship Session 9', 'icon' => 'bol-video-circle', 'url' => '/classes'];
+        $c['upper_cta'] = ['badge_text' => 'Live', 'main_text' => 'Upcoming: HD4A Agroinnovators Mentorship Session 9', 'icon' => 'bol-video-circle', 'url' => str_starts_with($c['upper_cta']['url'] ?? '', '/bundles') ? $c['upper_cta']['url'] : '/classes'];
         $c['main_content']['title_line_1'] = 'Learn';
         $c['main_content']['title_line_2'] = "and shape Africa's food systems";
         $c['main_content']['description'] = "Learn about Africa's food systems, connect with peers and experts. Join the community learning hub to build a resilient food system.";

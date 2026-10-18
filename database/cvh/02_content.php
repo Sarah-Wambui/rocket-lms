@@ -400,7 +400,10 @@ DB::transaction(function () use ($now, $learningExperience) {
     });
 
     // "Top Rated" stays empty until CVH courses receive reviews — hide it (and its spacer) until then.
-    DB::table('landing_components')->where('landing_id', 1)->whereIn('order', [13, 14])->update(['enable' => 0]);
+    $bestRatedOrder = DB::table('landing_components')->where('landing_id', 1)
+        ->where('component_id', DB::table('landing_builder_components')->where('name', 'best_rated_courses')->value('id'))
+        ->value('order');
+    DB::table('landing_components')->where('landing_id', 1)->whereIn('order', [$bestRatedOrder, $bestRatedOrder + 1])->update(['enable' => 0]);
 
     /* ---------- Hide the template's demo content (reversible; nothing deleted) ---------- */
     $cvhCourseIds = array_merge(array_values($courseIds), [$liveId]);
