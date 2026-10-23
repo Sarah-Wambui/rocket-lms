@@ -26,6 +26,17 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/{slug}', 'CvhCommunityController@category');
     });
 
+    // Course Q&A (in-house; replaces the paid Course Forum plugin feature)
+    Route::group(['prefix' => '/course/{slug}', 'middleware' => 'web.auth'], function () {
+        Route::get('/questions', 'CvhCourseQaController@index');
+        Route::post('/questions', 'CvhCourseQaController@store')->middleware('throttle:5,1');
+        Route::get('/questions/{id}', 'CvhCourseQaController@show')->where('id', '[0-9]+');
+        Route::post('/questions/{id}/answers', 'CvhCourseQaController@answer')->where('id', '[0-9]+')->middleware('throttle:10,1');
+        Route::get('/qa/{type}/{id}/edit', 'CvhCourseQaController@edit')->where(['type' => 'question|answer', 'id' => '[0-9]+']);
+        Route::post('/qa/{type}/{id}/update', 'CvhCourseQaController@update')->where(['type' => 'question|answer', 'id' => '[0-9]+']);
+        Route::post('/qa/action', 'CvhCourseQaController@action');
+    });
+
     // Certificates of completion (in-house; the template's certificate plugin is not used)
     Route::get('/certificates/verify', 'CvhCertificatesController@verify');
     Route::group(['middleware' => 'web.auth'], function () {

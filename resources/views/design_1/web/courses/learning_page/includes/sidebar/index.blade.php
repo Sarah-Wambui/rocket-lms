@@ -79,6 +79,17 @@
                 @endif
             @endif
 
+            {{-- CVH: in-house course Q&A (see CvhCourseQaController) --}}
+            @if(!empty($course->forum) and auth()->check())
+                <a href="/course/{{ $course->slug }}/questions" class="d-flex align-items-center justify-content-between gap-8 rounded-12 p-12 mt-12 bg-gray-100 text-decoration-none">
+                    <span class="d-flex align-items-center gap-4">
+                        <x-iconsax-bul-message-question class="icons text-primary" width="22px" height="22px"/>
+                        <span class="font-12 text-dark font-weight-bold">Course Q&A</span>
+                    </span>
+                    <span class="font-12 text-primary">Ask or answer questions →</span>
+                </a>
+            @endif
+
             {{-- Course Start Alert --}}
             @if(!empty($course->start_date))
                 <div class="d-flex align-items-center bg-gray-100 border-gray-300 rounded-12 p-12 mt-16">
