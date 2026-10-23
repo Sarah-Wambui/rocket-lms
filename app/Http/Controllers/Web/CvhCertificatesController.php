@@ -101,6 +101,7 @@ class CvhCertificatesController extends Controller
             'certificate' => $certificate,
             'config' => $config,
             'verifyUrl' => $verifyUrl,
+            'verifyDisplay' => preg_replace('#^https?://#', '', rtrim(config('app.url'), '/')) . '/certificates/verify',
             'qr' => 'data:image/svg+xml;base64,' . base64_encode($qrSvg),
             'img' => fn($path) => $path ? public_path(ltrim(rawurldecode($path), '/')) : null,
             'issuedOn' => dateTimeFormat($certificate->issued_at, 'j F Y', false),
