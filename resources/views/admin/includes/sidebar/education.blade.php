@@ -210,8 +210,9 @@
 @endcan
 
 @can('admin_course_question_forum_list')
-    <li class="{{ (request()->is(getAdminPanelUrl('/webinars/course_forums', false))) ? 'active' : '' }}">
-        <a class="nav-link " href="{{ getAdminPanelUrl() }}/webinars/course_forums">
+    {{-- CVH: points to the in-house course Q&A overview (the original page is a paid-plugin placeholder) --}}
+    <li class="{{ (request()->is(getAdminPanelUrl('/cvh-course-qa*', false))) ? 'active' : '' }}">
+        <a class="nav-link " href="{{ getAdminPanelUrl('/cvh-course-qa') }}">
             <x-iconsax-bul-messages-2 class="icons" width="24px" height="24px"/>
             <span>{{ trans('update.course_forum') }}</span>
         </a>

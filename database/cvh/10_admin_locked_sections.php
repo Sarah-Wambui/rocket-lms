@@ -100,6 +100,9 @@ try {
         $location = $r->getHeaderLine('Location');
         if (preg_match('#/licenses/([a-z_-]+)#', $location, $lm)) {
             $locked[$path] = $lm[1];
+        } elseif ($r->getStatusCode() === 200 and str_contains((string)$r->getBody(), 'This is a paid plugin!')) {
+            // Plugin pages shipped as placeholders ("This is a paid plugin!") without a licence redirect
+            $locked[$path] = 'paid-plugin-placeholder';
         }
     }
 } finally {

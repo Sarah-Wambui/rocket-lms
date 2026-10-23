@@ -33,6 +33,10 @@ $prefix = getAdminPanelUrlPrefix();
 
 // You can add as many route groups as needed
 
+// CVH Africa: course Q&A overview (Education > Course Forum)
+Route::get('/cvh-course-qa', 'CvhCourseQaAdminController@index');
+Route::post('/cvh-course-qa/{id}/delete', 'CvhCourseQaAdminController@destroy')->where('id', '[0-9]+');
+
 // CVH Africa: in-house Homepage Editor (Appearance > Homepage Editor)
 Route::group(['prefix' => 'cvh-homepage'], function () {
     Route::get('/', 'CvhHomepageController@index');
