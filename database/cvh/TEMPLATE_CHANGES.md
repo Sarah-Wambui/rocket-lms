@@ -6,6 +6,8 @@ A Rocket LMS update can overwrite these. After updating, check each one and re-a
 |---|---|
 | `routes/web.php` | Last lines: `require __DIR__ . '/cvh.php';` loads the CVH routes (innovations, community forum, certificates). |
 | `app/Mixins/Panel/SidebarItems.php` | Learner dashboard menu: the **Certificates** entry points to `/my-certificates` and `/certificates/verify` instead of the plugin's certificate pages (block marked `// CVH:`). |
+| `routes/custom_admin.php` | Homepage Editor admin routes (`/admin/cvh-homepage...`). This is the template's own file for custom admin routes. |
+| `resources/views/admin/includes/sidebar/appearance.blade.php` | Admin menu: **Landing Builder → Homepage Editor** link (marked `{{-- CVH: ... --}}`) and the group highlights on `/admin/cvh-homepage*`. |
 | `resources/views/design_1/web/courses/learning_page/includes/sidebar/index.blade.php` | Course learning page: certificate box below the progress bar ("Get your certificate" at 100%), marked `{{-- CVH: ... --}}`. |
 
-Everything else CVH-specific lives in new files that updates don't touch: `routes/cvh.php`, `app/Http/Controllers/Web/Cvh*Controller.php`, `resources/views/design_1/web/cvh_*`, `resources/views/landingBuilder/front/components/cvh_partners`, `config/cvh_certificate.php` and `database/cvh/`. Theme colours, homepage content and menus are stored in the database (scripts in `database/cvh/`).
+Everything else CVH-specific lives in new files that updates don't touch: `routes/cvh.php`, `app/Http/Controllers/Web/Cvh*Controller.php`, `resources/views/design_1/web/cvh_*`, `resources/views/landingBuilder/front/components/cvh_partners`, `resources/views/admin/cvh_homepage`, `app/Http/Controllers/Admin/CvhHomepageController.php`, `config/cvh_certificate.php`, `config/cvh_landing_editor.php` and `database/cvh/`. Theme colours, homepage content and menus are stored in the database (scripts in `database/cvh/`).

@@ -51,12 +51,19 @@
 @endcan
 
 @can('admin_landing_builder')
-    <li class="nav-item dropdown {{ (request()->is(getLandingBuilderUrl('*', false))) ? 'active' : '' }}">
+    <li class="nav-item dropdown {{ (request()->is(getLandingBuilderUrl('*', false)) or request()->is(getAdminPanelUrl('/cvh-homepage*', false))) ? 'active' : '' }}">
         <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
         <x-iconsax-bul-colorfilter class="icons" width="24px" height="24px"/>
             <span>{{ trans('update.landing_builder') }}</span>
         </a>
         <ul class="dropdown-menu">
+            {{-- CVH: in-house Homepage Editor (the template's builder needs the Theme Builder licence) --}}
+            @can('admin_themes_create')
+                <li class="{{ (request()->is(getAdminPanelUrl('/cvh-homepage*', false))) ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ getAdminPanelUrl('/cvh-homepage') }}">Homepage Editor</a>
+                </li>
+            @endcan
+
             @can('admin_landing_builder_create')
                 <li class="{{ (request()->is(getLandingBuilderUrl('/start', false))) ? 'active' : '' }}">
                     <a class="nav-link" href="{{ getLandingBuilderUrl("/start") }}">{{ trans('update.new_landing') }}</a>

@@ -33,6 +33,17 @@ $prefix = getAdminPanelUrlPrefix();
 
 // You can add as many route groups as needed
 
+// CVH Africa: in-house Homepage Editor (Appearance > Homepage Editor)
+Route::group(['prefix' => 'cvh-homepage'], function () {
+    Route::get('/', 'CvhHomepageController@index');
+    Route::post('/', 'CvhHomepageController@store');
+    Route::get('/{id}/edit', 'CvhHomepageController@edit')->where('id', '[0-9]+');
+    Route::post('/{id}/update', 'CvhHomepageController@update')->where('id', '[0-9]+');
+    Route::post('/{id}/toggle', 'CvhHomepageController@toggle')->where('id', '[0-9]+');
+    Route::post('/{id}/move/{direction}', 'CvhHomepageController@move')->where(['id' => '[0-9]+', 'direction' => 'up|down']);
+    Route::post('/{id}/delete', 'CvhHomepageController@destroy')->where('id', '[0-9]+');
+});
+
 /**
  * To use these routes, you must have your controller in App\Http\Controllers\Admin namespace
  * or specify the complete namespace like:
