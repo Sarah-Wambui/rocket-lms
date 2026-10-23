@@ -4,6 +4,7 @@ A Rocket LMS update can overwrite these. After updating, check each one and re-a
 
 | File | Change |
 |---|---|
+| `bootstrap/app.php` | First line after `<?php`: loads `app/Support/finfo_polyfill.php`, a temporary stand-in for the PHP **fileinfo** extension (does nothing once the server has fileinfo). Safe to remove after the host installs `ea-php83-php-fileinfo`. |
 | `routes/web.php` | Last lines: `require __DIR__ . '/cvh.php';` loads the CVH routes (innovations, community forum, certificates). |
 | `app/Mixins/Panel/SidebarItems.php` | Learner dashboard menu: the **Certificates** entry points to `/my-certificates` and `/certificates/verify` instead of the plugin's certificate pages (block marked `// CVH:`). |
 | `routes/custom_admin.php` | Homepage Editor admin routes (`/admin/cvh-homepage...`). This is the template's own file for custom admin routes. |

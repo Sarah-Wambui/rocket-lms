@@ -1,5 +1,8 @@
 <?php
 
+// CVH: temporary stand-in for the PHP "fileinfo" extension when the server lacks it (no-op once it is installed)
+require_once __DIR__ . '/../app/Support/finfo_polyfill.php';
+
 /*
 |--------------------------------------------------------------------------
 | Create The Application
