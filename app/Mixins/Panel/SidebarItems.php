@@ -346,25 +346,17 @@ class SidebarItems
         }
 
 
-        if ($user->can('panel_certificates')) {
-            $items['certificates'] = [
-                'icon' => self::getIcon('certificates'),
-                'text' => trans('panel.certificates'),
-                'url' => '/panel/certificates',
-                'items' => []
-            ];
-
-            if (($user->isOrganization() || $user->isTeacher()) and $user->can('panel_certificates_lists')) {
-                $items['certificates']['items'][] = ['text' => trans('public.list'), 'url' => '/panel/certificates'];
-                $items['certificates']['items'][] = ['text' => trans('webinars.all_students'), 'url' => '/panel/certificates/students'];
-            }
-
-            if ($user->can('panel_certificates_achievements')) {
-                $items['certificates']['items'][] = ['text' => trans('update.my_achievements'), 'url' => '/panel/certificates/my-achievements'];
-            }
-
-            $items['certificates']['items'][] = ['text' => trans('site.certificate_validation'), 'url' => '/certificate_validation'];
-        }
+        // CVH: the template's certificate pages belong to the paid plugin; point this menu to the
+        // in-house certificates (/my-certificates, /certificates/verify) for every logged-in user.
+        $items['certificates'] = [
+            'icon' => self::getIcon('certificates'),
+            'text' => trans('panel.certificates'),
+            'url' => '/my-certificates',
+            'items' => [
+                ['text' => 'My Certificates', 'url' => '/my-certificates'],
+                ['text' => trans('site.certificate_validation'), 'url' => '/certificates/verify'],
+            ]
+        ];
 
         return $items;
     }

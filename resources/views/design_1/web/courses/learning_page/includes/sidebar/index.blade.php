@@ -61,6 +61,24 @@
                 </div>
             @endif
 
+            {{-- CVH: in-house certificate of completion (see CvhCertificatesController) --}}
+            @if(!empty($course->certificate) and auth()->check())
+                @if($percent >= 100)
+                    <div class="d-flex align-items-center justify-content-between gap-8 rounded-12 p-12 mt-16" style="background: rgba(94,172,73,.12); border: 1px solid var(--accent);">
+                        <div class="d-flex align-items-center gap-4">
+                            <x-iconsax-bul-medal-star class="icons" style="color: var(--accent);" width="24px" height="24px"/>
+                            <span class="font-12 text-dark">Course completed!</span>
+                        </div>
+                        <a href="/my-certificates/{{ $course->id }}/download" class="btn btn-primary btn-sm">Get your certificate</a>
+                    </div>
+                @else
+                    <div class="d-flex align-items-center gap-4 rounded-12 p-12 mt-16 bg-gray-100">
+                        <x-iconsax-lin-medal-star class="icons text-gray-500" width="20px" height="20px"/>
+                        <span class="font-12 text-gray-500">Complete every lesson to unlock your certificate.</span>
+                    </div>
+                @endif
+            @endif
+
             {{-- Course Start Alert --}}
             @if(!empty($course->start_date))
                 <div class="d-flex align-items-center bg-gray-100 border-gray-300 rounded-12 p-12 mt-16">
