@@ -25,4 +25,11 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
         Route::get('/{slug}', 'CvhCommunityController@category');
     });
+
+    // Certificates of completion (in-house; the template's certificate plugin is not used)
+    Route::get('/certificates/verify', 'CvhCertificatesController@verify');
+    Route::group(['middleware' => 'web.auth'], function () {
+        Route::get('/my-certificates', 'CvhCertificatesController@index');
+        Route::get('/my-certificates/{webinarId}/download', 'CvhCertificatesController@download')->where('webinarId', '[0-9]+');
+    });
 });
