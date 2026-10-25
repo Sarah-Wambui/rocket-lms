@@ -53,7 +53,7 @@
                             @endif
                         </div>
                         <div class="flex-shrink-0">
-                            @if($done or $row['certificate'])
+                            @if($done or $row['certificate'] or $row['earned'])
                                 <a href="/my-certificates/{{ $course->id }}/download" class="btn btn-primary btn-lg">Download certificate</a>
                             @else
                                 <a href="/course/learning/{{ $course->slug }}" class="btn btn-outline-primary btn-lg">Continue learning</a>
