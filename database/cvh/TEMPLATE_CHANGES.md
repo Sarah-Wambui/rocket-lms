@@ -15,3 +15,13 @@ A Rocket LMS update can overwrite these. After updating, check each one and re-a
 | `resources/views/design_1/web/courses/learning_page/includes/contents/certificate/course_certificate.blade.php`, `.../sidebar/tabs/certificates.blade.php`, `.../top_header/course_tools.blade.php` | Learning page "Course Certificate" item, its sidebar download icon and the tools-menu "Certificates" link go to the in-house `/my-certificates` pages instead of the plugin `/panel/certificates/...` pages, marked `{{-- CVH: ... --}}`. |
 
 Everything else CVH-specific lives in new files that updates don't touch: `routes/cvh.php`, `app/Http/Controllers/Web/Cvh*Controller.php`, `resources/views/design_1/web/cvh_*`, `resources/views/landingBuilder/front/components/cvh_partners`, `resources/views/admin/cvh_homepage`, `app/Http/Controllers/Admin/CvhHomepageController.php`, `app/Http/Controllers/Admin/CvhCourseQaAdminController.php`, `resources/views/admin/cvh_course_qa`, `config/cvh_certificate.php`, `config/cvh_landing_editor.php` and `database/cvh/`. Theme colours, homepage content and menus are stored in the database (scripts in `database/cvh/`).
+
+## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
+
+Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.
+
+| View | Page |
+|---|---|
+| `resources/views/admin/forms/lists/index.blade.php` | Admin → Forms (list) |
+| `resources/views/admin/forms/create/index.blade.php` | Admin → Forms → New / Edit (tabs: basic info, welcome, thank-you, inputs) |
+| `resources/views/admin/forms/submissions/index.blade.php` | Admin → Forms → Submissions |
