@@ -216,7 +216,8 @@
                 </li>
 
                 <li class="learning-page__dropdown-menu__item">
-                    <a href="/panel/certificates/my-achievements" target="_blank"
+                    {{-- CVH: in-house My Certificates page --}}
+                    <a href="/my-certificates" target="_blank"
                         class="d-flex align-items-center w-100 px-16 py-8">
                         <x-iconsax-lin-medal class="icons" width="24px" height="24px" />
                         <span class="ml-8">{{ trans('panel.certificates') }}</span>

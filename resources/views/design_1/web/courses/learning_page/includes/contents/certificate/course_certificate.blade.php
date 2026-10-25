@@ -14,7 +14,8 @@
 
     <h5 class="font-12 text-dark mt-8">{{ trans('update.course_completion_certificate') }}</h5>
 
-    <a href="/panel/certificates/my-achievements/{{ $courseCertificate->id }}/show" target="_blank" class="btn btn-primary btn-lg mt-24">
+    {{-- CVH: in-house certificate download (the plugin page /panel/certificates/my-achievements/... fails) --}}
+    <a href="/my-certificates/{{ $courseCertificate->webinar_id }}/download" target="_blank" class="btn btn-primary btn-lg mt-24">
         <span class="">{{ trans('home.download') }}</span>
     </a>
 @else

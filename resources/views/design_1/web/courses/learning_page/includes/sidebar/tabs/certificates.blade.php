@@ -25,7 +25,8 @@
 
         <div class="d-flex align-items-center">
             @if(!empty($courseCertificate))
-                <a href="/panel/certificates/webinars/{{ $courseCertificate->id }}/show" target="_blank" class="d-flex-center size-32 rounded-circle bg-white">
+                {{-- CVH: in-house certificate download (the plugin link here was a 404) --}}
+                <a href="/my-certificates/{{ $course->id }}/download" target="_blank" class="d-flex-center size-32 rounded-circle bg-white">
                     <x-iconsax-lin-import class="icons text-gray-500" width="16px" height="16px"/>
                 </a>
             @endif
