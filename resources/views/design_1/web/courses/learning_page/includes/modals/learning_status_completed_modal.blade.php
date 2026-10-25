@@ -23,8 +23,9 @@
             <h3 class="mt-40 font-14 text-dark">{{ trans('update.you_did_it_perfectly') }} 🎉</h3>
             <div class="mt-8 font-12 text-gray-500">{{ trans('update.course_completed_modal_hint') }}</div>
 
-            @if(!empty($courseCertificate))
-                <a href="/panel/certificates/my-achievements/{{ $courseCertificate->id }}/show" target="_blank" class="btn btn-primary mt-16">{{ trans('update.download_certificate') }}</a>
+            {{-- CVH: certificates are issued in-house (CvhCertificatesController), not by the paid certificates plugin --}}
+            @if(!empty($course->certificate))
+                <a href="/my-certificates/{{ $course->id }}/download" target="_blank" class="btn btn-primary mt-16">{{ trans('update.download_certificate') }}</a>
             @else
                 <a href="/panel/courses/purchases" target="_blank" class="btn btn-primary mt-16">{{ trans('update.my_courses') }}</a>
             @endif
