@@ -25,3 +25,16 @@ Only the top-level page views were placeholders; the controllers, routes, sub-vi
 | `resources/views/admin/forms/lists/index.blade.php` | Admin → Forms (list) |
 | `resources/views/admin/forms/create/index.blade.php` | Admin → Forms → New / Edit (tabs: basic info, welcome, thank-you, inputs) |
 | `resources/views/admin/forms/submissions/index.blade.php` | Admin → Forms → Submissions |
+| `resources/views/admin/bundles/lists.blade.php`, `create.blade.php` | Admin → Bundles (list, create/edit with courses, price plans, FAQ) |
+| `resources/views/admin/quizzes/lists.blade.php` | Admin → Quizzes |
+| `resources/views/admin/certificates/lists.blade.php`, `course_certificates.blade.php` | Admin → Certificates (quiz certificates; completion certificates with the in-house verify code) |
+| `resources/views/admin/enrollment/add_student_to_a_class.blade.php`, `history.blade.php` | Admin → Enrollments (add student, history) |
+| `resources/views/admin/noticeboards/lists.blade.php`, `send.blade.php` | Admin → Noticeboards and Course noticeboards |
+| `resources/views/admin/upcoming_courses/lists.blade.php`, `create/index.blade.php` | Admin → Upcoming courses |
+| `resources/views/admin/waitlists/index.blade.php` | Admin → Waitlists |
+| `resources/views/admin/attendances/history/index.blade.php`, `details/index.blade.php` | Admin → Attendances |
+| `resources/views/admin/webinars/assignments/lists.blade.php` | Admin → Assignments |
+| `resources/views/admin/webinars/course_statistics/index.blade.php` | Admin → Course statistics |
+| `resources/views/admin/webinars/personal_notes/index.blade.php` | Admin → Course notes (needs the Course notes feature switched on) |
+
+Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced by Admin → Course Forum = `/admin/cvh-course-qa`), site forum admin (`admin/forums/*`, the public forum is `/community`), certificate templates (the PDF design is `config/cvh_certificate.php`), and the selling/payments features.
