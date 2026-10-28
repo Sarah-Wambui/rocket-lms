@@ -174,7 +174,28 @@ class CvhGoogleMeet
             'description' => 'CVH Africa live class.' . ($course ? ' Course: ' . url('/course/' . $course->slug) : ''),
             'start' => ['dateTime' => gmdate('Y-m-d\TH:i:s\Z', $start), 'timeZone' => 'UTC'],
             'end' => ['dateTime' => gmdate('Y-m-d\TH:i:s\Z', $end), 'timeZone' => 'UTC'],
+            // Invited guests join the Meet directly instead of "asking to join" the connected (host) account
+            'attendees' => self::instructorGuests($session),
         ];
+    }
+
+    /** The course's instructor and co-instructors (plus the session's creator), as Calendar guests; never the host. */
+    private static function instructorGuests(Session $session): array
+    {
+        $course = $session->webinar;
+        $userIds = array_filter([$session->creator_id, $course->teacher_id ?? null]);
+        if ($course) {
+            $userIds = array_merge($userIds, DB::table('webinar_partner_teacher')->where('webinar_id', $course->id)->pluck('teacher_id')->all());
+        }
+
+        $host = strtolower((string)self::settings()['account_email']);
+
+        return DB::table('users')->whereIn('id', array_unique($userIds))->whereNotNull('email')->pluck('email')
+            ->map(fn($email) => strtolower(trim($email)))
+            ->filter(fn($email) => filter_var($email, FILTER_VALIDATE_EMAIL) && $email !== $host)
+            ->unique()->values()
+            ->map(fn($email) => ['email' => $email])
+            ->all();
     }
 
     /** Create (or, when it already has one, update) the session's Calendar event and save its Meet link on the session. */
