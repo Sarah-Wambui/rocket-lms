@@ -104,6 +104,36 @@ class CvhGoogleMeet
             'connected_client_id' => $settings['client_id'],
         ]);
         Cache::put('cvh_google_meet_token', $response->json('access_token'), max(60, (int)$response->json('expires_in', 3600) - 120));
+
+        self::offerInSessionForm(); // connected = ready to use: offer it in the live session form
+    }
+
+    /**
+     * Add "Google Meet" to Settings → General → Features → Live Class Providers (available_session_apis), so the live
+     * session form offers it, and drop the cached settings. Returns false when it was already there.
+     */
+    public static function offerInSessionForm(): bool
+    {
+        $settingId = DB::table('settings')->where('name', 'features')->value('id');
+        if (!$settingId) {
+            return false;
+        }
+
+        $added = false;
+        foreach (DB::table('setting_translations')->where('setting_id', $settingId)->get() as $row) {
+            $value = json_decode((string)$row->value, true) ?: [];
+            $apis = array_values(array_filter((array)($value['available_session_apis'] ?? [])));
+            if (!in_array('google_meet', $apis, true)) {
+                $apis[] = 'google_meet';
+                $value['available_session_apis'] = $apis;
+                DB::table('setting_translations')->where('id', $row->id)->update(['value' => json_encode($value)]);
+                $added = true;
+            }
+        }
+
+        Cache::forget('settings.features');
+
+        return $added;
     }
 
     public static function disconnect(): void
