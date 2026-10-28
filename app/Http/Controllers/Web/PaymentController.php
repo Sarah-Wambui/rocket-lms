@@ -200,10 +200,25 @@ class PaymentController extends Controller
     {
         if (!empty($order)) {
 
-            if ($order->status == Order::$paying) {
-                $this->setPaymentAccounting($order);
+            // CVH: claim the order atomically (paying -> paid) so a repeated or simultaneous gateway callback
+            // cannot record the sale twice; only the request that wins the claim does the accounting.
+            $claimed = ($order->status == Order::$paying) && Order::query()
+                    ->where('id', $order->id)
+                    ->where('status', Order::$paying)
+                    ->update(['status' => Order::$paid]) === 1;
 
-                $order->update(['status' => Order::$paid]);
+            if ($claimed) {
+                try {
+                    $this->setPaymentAccounting($order);
+                } catch (\Throwable $exception) {
+                    Order::query()->where('id', $order->id)->update(['status' => Order::$paying]);
+                    throw $exception;
+                }
+
+                $order->status = Order::$paid;
+            } elseif ($order->status == Order::$paying) {
+                // Another request already processed this payment
+                $order->refresh();
             } else {
                 if ($order->type === Order::$meeting) {
                     $orderItem = OrderItem::where('order_id', $order->id)->first();

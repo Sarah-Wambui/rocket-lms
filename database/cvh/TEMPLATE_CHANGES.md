@@ -16,6 +16,15 @@ A Rocket LMS update can overwrite these. After updating, check each one and re-a
 
 Everything else CVH-specific lives in new files that updates don't touch: `routes/cvh.php`, `app/Http/Controllers/Web/Cvh*Controller.php`, `resources/views/design_1/web/cvh_*`, `resources/views/landingBuilder/front/components/cvh_partners`, `resources/views/admin/cvh_homepage`, `app/Http/Controllers/Admin/CvhHomepageController.php`, `app/Http/Controllers/Admin/CvhCourseQaAdminController.php`, `resources/views/admin/cvh_course_qa`, `config/cvh_certificate.php`, `config/cvh_landing_editor.php` and `database/cvh/`. Theme colours, homepage content and menus are stored in the database (scripts in `database/cvh/`).
 
+## Payments (Paystack)
+
+| File | Change |
+|---|---|
+| `app/PaymentChannels/Drivers/Paystack/Channel.php` | Amount sent in cents (x100; the template sent x1000 = 10x the price); reference stored on the order; verification now requires Paystack's transaction status `success`, the same reference, order, amount and currency (the template accepted any answer from Paystack, including abandoned payments); paid orders are never changed again; default API URL `https://api.paystack.co`. Marked `CVH:`. |
+| `app/Http/Controllers/Web/PaymentController.php` | `paymentOrderAfterVerify`: the order is claimed atomically (`paying` -> `paid`) before the sale is recorded, so a repeated or simultaneous gateway callback cannot enrol/charge twice (applies to every gateway). Marked `CVH:`. |
+
+`database/cvh/15_paystack_channel.php` registers the Paystack gateway (the database only listed PayPal, PayU and Razorpay).
+
 ## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
 
 Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.
