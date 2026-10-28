@@ -68,7 +68,8 @@
 
             <div class="mt-16 mt-lg-0">
                 @if(!empty($authUser) and $quiz->can_download_certificate and $hasBought)
-                    <a href="/panel/quizzes/results/{{ $quiz->result->id }}/showCertificate" target="_blank" class="btn btn-primary btn-lg">
+                    {{-- CVH: in-house quiz certificate (the template's page needs a paid outside image service) --}}
+                    <a href="/my-certificates/quiz/{{ $quiz->result->id }}/download" target="_blank" class="btn btn-primary btn-lg">
                         <x-iconsax-lin-direct-inbox class="icons text-white" width="16px" height="16px"/>
                         <span class="ml-4 text-white">{{ trans('home.download') }}</span>
                     </a>

@@ -512,7 +512,8 @@ try {
             continue;
         }
         if ($hasCvhCertificates && !mapped('cvh_certificates', $row['id'])
-            && !DB::table('cvh_certificates')->where(['user_id' => $userId, 'webinar_id' => $webinarId])->exists()) {
+            && !DB::table('cvh_certificates')->where(['user_id' => $userId, 'webinar_id' => $webinarId])
+                ->when(Schema::hasColumn('cvh_certificates', 'quiz_id'), fn($q) => $q->where('quiz_id', 0))->exists()) {
             do {
                 $code = 'CVH-' . date('Y', (int)$row['created_at']) . '-' . strtoupper(Str::random(8));
             } while (DB::table('cvh_certificates')->where('code', $code)->exists());

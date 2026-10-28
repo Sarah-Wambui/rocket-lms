@@ -68,7 +68,8 @@
 
                 <div class="d-flex align-items-center">
                     @if(!empty($courseQuizResult))
-                        <a href="/panel/quizzes/results/{{ $courseQuizResult->id }}/showCertificate" target="_blank" class="d-flex-center size-32 rounded-circle bg-white">
+                        {{-- CVH: in-house quiz certificate (the template's page needs a paid outside image service) --}}
+                        <a href="/my-certificates/quiz/{{ $courseQuizResult->id }}/download" target="_blank" class="d-flex-center size-32 rounded-circle bg-white">
                             <x-iconsax-lin-import-2 class="icons text-gray-500" width="16px" height="16px"/>
                         </a>
                     @endif

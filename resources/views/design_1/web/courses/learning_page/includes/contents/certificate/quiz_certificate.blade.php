@@ -27,7 +27,8 @@
 @endif
 
 @if(!empty($quizResult))
-    <a href="/panel/quizzes/results/{{ $quizResult->id }}/showCertificate" target="_blank" class="btn btn-primary btn-lg mt-24">
+    {{-- CVH: in-house quiz certificate (the template's page needs a paid outside image service) --}}
+    <a href="/my-certificates/quiz/{{ $quizResult->id }}/download" target="_blank" class="btn btn-primary btn-lg mt-24">
         <span class="">{{ trans('home.download') }}</span>
     </a>
 @endif

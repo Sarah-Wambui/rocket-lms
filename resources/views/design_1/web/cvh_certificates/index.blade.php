@@ -67,6 +67,29 @@
                 @endforelse
             </div>
 
+            @if(!empty($quizResults) and count($quizResults))
+                <h2 class="font-18 font-weight-bold mt-32">Quiz certificates</h2>
+                <div class="bg-white rounded-24 mt-16" style="border: 1px solid var(--gray-200);">
+                    @foreach($quizResults as $quizResult)
+                        @php $quizCertificate = $quizIssued[$quizResult->quiz_id] ?? null; @endphp
+                        <div class="cvh-cert-row">
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                <div class="font-15 font-weight-bold text-dark">{{ $quizResult->quiz->title }}</div>
+                                <div class="font-12 text-gray-500 mt-4">
+                                    {{ $quizResult->quiz->webinar ? $quizResult->quiz->webinar->title . ' · ' : '' }}Passed with {{ $quizResult->user_grade }}{{ $quizResult->quiz->total_mark ? ' / ' . $quizResult->quiz->total_mark : '' }}
+                                </div>
+                                @if($quizCertificate)
+                                    <div class="font-12 text-gray-500 mt-4">Certificate ID: {{ $quizCertificate->code }}</div>
+                                @endif
+                            </div>
+                            <div class="flex-shrink-0">
+                                <a href="/my-certificates/quiz/{{ $quizResult->id }}/download" class="btn btn-primary btn-lg">Download certificate</a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             <p class="font-12 text-gray-500 mt-16">Anyone can confirm a certificate is genuine at <a href="/certificates/verify" class="text-primary">{{ rtrim(config('app.url'), '/') }}/certificates/verify</a>.</p>
         </div>
     </main>

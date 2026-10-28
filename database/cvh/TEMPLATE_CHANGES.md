@@ -25,6 +25,14 @@ Everything else CVH-specific lives in new files that updates don't touch: `route
 
 `database/cvh/15_paystack_channel.php` registers the Paystack gateway (the database only listed PayPal, PayU and Razorpay).
 
+## Quiz certificates and offline payments
+
+| File | Change |
+|---|---|
+| `app/Http/Controllers/Web/CvhCertificatesController.php` | `downloadQuiz()`: in-house PDF for passed quizzes that award a certificate (the template's `/panel/quizzes/results/{id}/showCertificate` needs the paid htmlcsstoimage.com service); My Certificates lists them. `cvh_certificates.quiz_id` (0 = course) from `database/cvh/17_quiz_certificates.php`. |
+| `design_1/panel/quizzes/holding/status/passed.blade.php`, `design_1/web/courses/learning_page/includes/contents/certificate/quiz_certificate.blade.php`, `.../contents/quiz/result_status.blade.php`, `.../sidebar/tabs/certificates.blade.php`, `design_1/web/courses/show/tabs/contents/quiz_certificate.blade.php` | Quiz-certificate links go to `/my-certificates/quiz/{resultId}/download`. Marked `CVH:`. |
+| `app/Http/Controllers/Admin/OfflinePaymentController.php` | `approved()` claims the request atomically (waiting -> approved) so a second approve cannot credit the wallet twice; `reject()` only for waiting requests. Marked `CVH:`. |
+
 ## Admissions
 
 New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionController.php` (/admission, fee via Paystack), `app/Http/Controllers/Admin/CvhAdmissionsAdminController.php` (Admin → Users → Admissions), views `design_1/web/cvh_admission`, `admin/cvh_admissions`, tables from `database/cvh/16_admissions.php`.
@@ -63,5 +71,7 @@ Only the top-level page views were placeholders; the controllers, routes, sub-vi
 | `resources/views/admin/webinars/course_statistics/index.blade.php` | Admin → Course statistics |
 | `resources/views/admin/webinars/personal_notes/index.blade.php` | Admin → Course notes (needs the Course notes feature switched on) |
 | `resources/views/admin/financial/subscribes/lists.blade.php`, `create/index.blade.php` | Admin → Financial → Subscriptions (plans; sales column counts plan purchases only) |
+| `resources/views/admin/financial/offline_payments/lists.blade.php` | Admin → Financial → Offline Payments (waiting / history, approve, reject, export) |
+| `resources/views/admin/rewards/history.blade.php`, `create.blade.php`, `settings.blade.php` | Admin → Reward Points (points per user, conditions, settings) |
 
 Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced by Admin → Course Forum = `/admin/cvh-course-qa`), site forum admin (`admin/forums/*`, the public forum is `/community`), certificate templates (the PDF design is `config/cvh_certificate.php`), and the selling/payments features.

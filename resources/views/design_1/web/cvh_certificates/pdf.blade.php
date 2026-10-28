@@ -48,15 +48,21 @@
         @endif
 
         <div class="title">CERTIFICATE</div>
-        <div class="subtitle">OF COMPLETION</div>
+        <div class="subtitle">{{ !empty($certificate->quiz_id) ? 'OF ACHIEVEMENT' : 'OF COMPLETION' }}</div>
 
         <div class="intro">This is to certify that</div>
         <div class="name">{{ $certificate->student_name }}</div>
         <div class="name-line"></div>
 
-        <div class="course-intro">has successfully completed the course</div>
-        <div class="course">{{ $certificate->course_title }}</div>
-        <div class="date">on {{ $issuedOn }}, offered by {{ $config['issuer'] }}</div>
+        @if(!empty($certificate->quiz_id))
+            <div class="course-intro">has passed the assessment</div>
+            <div class="course">{{ $certificate->quiz_title }}</div>
+            <div class="date">{{ $certificate->course_title ? 'in the course ' . $certificate->course_title . ', ' : '' }}with a grade of {{ $certificate->grade }}, on {{ $issuedOn }}</div>
+        @else
+            <div class="course-intro">has successfully completed the course</div>
+            <div class="course">{{ $certificate->course_title }}</div>
+            <div class="date">on {{ $issuedOn }}, offered by {{ $config['issuer'] }}</div>
+        @endif
 
     </div>
 

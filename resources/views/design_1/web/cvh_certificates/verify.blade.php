@@ -38,6 +38,10 @@
                         <div class="row mt-16 font-14">
                             <div class="col-12 col-md-6 mt-8"><span class="text-gray-500">Awarded to</span><div class="font-18 font-weight-bold text-dark">{{ $certificate->student_name }}</div></div>
                             <div class="col-12 col-md-6 mt-8"><span class="text-gray-500">Course</span><div class="font-16 font-weight-bold text-dark">{{ $certificate->course_title }}</div></div>
+                            @if(!empty($certificate->quiz_id))
+                                <div class="col-12 col-md-6 mt-16"><span class="text-gray-500">Assessment passed</span><div class="font-16 font-weight-bold text-dark">{{ $certificate->quiz_title }}</div></div>
+                                <div class="col-12 col-md-6 mt-16"><span class="text-gray-500">Grade</span><div class="text-dark">{{ $certificate->grade }}</div></div>
+                            @endif
                             <div class="col-12 col-md-6 mt-16"><span class="text-gray-500">Issued on</span><div class="text-dark">{{ dateTimeFormat($certificate->issued_at, 'j F Y', false) }}</div></div>
                             <div class="col-12 col-md-6 mt-16"><span class="text-gray-500">Certificate ID</span><div class="text-dark">{{ $certificate->code }}</div></div>
                         </div>

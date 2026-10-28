@@ -79,7 +79,8 @@
 <div class="d-flex align-items-center gap-12 mt-24">
     @if($quiz->result->status == "passed")
         @if($quiz->can_download_certificate)
-            <a href="/panel/quizzes/results/{{ $quiz->result->id }}/showCertificate" target="_blank" class="btn btn-primary btn-lg">{{ trans('update.download_certificate') }}</a>
+            {{-- CVH: in-house quiz certificate (the template's page needs a paid outside image service) --}}
+            <a href="/my-certificates/quiz/{{ $quiz->result->id }}/download" target="_blank" class="btn btn-primary btn-lg">{{ trans('update.download_certificate') }}</a>
         @endif
 
         <a href="/panel/quizzes/{{ $quiz->result->id }}/result" target="_blank" class="btn btn-outline-primary btn-lg">{{ trans('update.view_answers') }}</a>

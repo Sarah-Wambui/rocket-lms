@@ -6,6 +6,7 @@
 @php
     $cvhCodes = \Illuminate\Support\Facades\DB::table('cvh_certificates')
         ->whereIn('user_id', $certificates->pluck('student_id')->filter()->all())
+        ->where('quiz_id', 0)
         ->get()
         ->keyBy(fn($row) => $row->user_id . '-' . $row->webinar_id);
 @endphp

@@ -19,7 +19,8 @@
 
     <div class="d-flex align-items-center flex-wrap gap-16 mt-16">
         @if($quiz->certificate)
-            <a href="/panel/quizzes/results/{{ $quizResult->id }}/showCertificate" class="btn btn-primary btn-lg">{{ trans('quiz.download_certificate') }}</a>
+            {{-- CVH: in-house quiz certificate (the template's page needs a paid outside image service) --}}
+            <a href="/my-certificates/quiz/{{ $quizResult->id }}/download" class="btn btn-primary btn-lg">{{ trans('quiz.download_certificate') }}</a>
         @elseif(!empty($webinar))
             <a href="{{ $webinar->getLearningPageUrl() }}" class="btn btn-primary btn-lg">{{ trans('update.back_to_learning_page') }}</a>
         @endif

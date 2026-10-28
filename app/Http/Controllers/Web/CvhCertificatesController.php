@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\QuizzesResult;
 use App\Models\Webinar;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class CvhCertificatesController extends Controller
             ->whereNull('refund_at')->pluck('webinar_id')->unique();
 
         $courses = Webinar::query()->whereIn('id', $courseIds)->where('status', 'active')->get();
-        $issued = DB::table('cvh_certificates')->where('user_id', $user->id)->get()->keyBy('webinar_id');
+        $issued = DB::table('cvh_certificates')->where('user_id', $user->id)->where('quiz_id', 0)->get()->keyBy('webinar_id');
         $earnedBefore = DB::table('certificates')->where('type', 'course')->where('student_id', $user->id)->pluck('webinar_id')->flip();
 
         $rows = $courses->map(fn($course) => [
@@ -37,10 +38,24 @@ class CvhCertificatesController extends Controller
             'earned' => isset($earnedBefore[$course->id]),
         ])->sortByDesc('progress')->values();
 
+        // Passed quizzes that award a certificate (best passing result per quiz)
+        $quizResults = QuizzesResult::query()
+            ->where('user_id', $user->id)
+            ->where('status', QuizzesResult::$passed)
+            ->whereHas('quiz', fn($query) => $query->where('certificate', true))
+            ->with(['quiz.webinar'])
+            ->orderByDesc('user_grade')
+            ->get()
+            ->unique('quiz_id')
+            ->values();
+        $quizIssued = DB::table('cvh_certificates')->where('user_id', $user->id)->where('quiz_id', '>', 0)->get()->keyBy('quiz_id');
+
         return view('design_1.web.cvh_certificates.index', [
             'pageTitle' => 'My Certificates',
             'pageRobot' => 'noindex, nofollow',
             'rows' => $rows,
+            'quizResults' => $quizResults,
+            'quizIssued' => $quizIssued,
         ]);
     }
 
@@ -51,7 +66,7 @@ class CvhCertificatesController extends Controller
         $course = Webinar::query()->where('id', $webinarId)->where('status', 'active')->first();
         abort_if(empty($course), 404);
 
-        $certificate = DB::table('cvh_certificates')->where('user_id', $user->id)->where('webinar_id', $course->id)->first();
+        $certificate = DB::table('cvh_certificates')->where('user_id', $user->id)->where('webinar_id', $course->id)->where('quiz_id', 0)->first();
 
         if (empty($certificate)) {
             $enrolled = DB::table('sales')->where('buyer_id', $user->id)->where('webinar_id', $course->id)->whereNull('refund_at')->exists();
@@ -83,6 +98,48 @@ class CvhCertificatesController extends Controller
         }
 
         return $this->pdf($certificate)->download('CVH-Certificate-' . Str::slug($certificate->course_title) . '.pdf');
+    }
+
+    /**
+     * Issue (first time) and download the certificate for a passed quiz that awards one. Replaces the template's
+     * /panel/quizzes/results/{id}/showCertificate, which needs a paid outside image service (htmlcsstoimage.com).
+     */
+    public function downloadQuiz($quizResultId)
+    {
+        $user = auth()->user();
+
+        $result = QuizzesResult::query()->where('id', $quizResultId)->where('user_id', $user->id)
+            ->where('status', QuizzesResult::$passed)->with(['quiz.webinar'])->first();
+        abort_if(empty($result) || empty($result->quiz) || !$result->quiz->certificate, 404);
+
+        $quiz = $result->quiz;
+        $courseId = (int)$quiz->webinar_id;
+        $certificate = DB::table('cvh_certificates')->where('user_id', $user->id)->where('webinar_id', $courseId)->where('quiz_id', $quiz->id)->first();
+
+        if (empty($certificate)) {
+            if (trim((string)$user->full_name) === '') {
+                return redirect('/my-certificates')->with('cvh_cert_status', 'Please add your full name in Dashboard > Settings first; it is printed on your certificate.');
+            }
+
+            do {
+                $code = 'CVH-' . date('Y') . '-' . strtoupper(Str::random(8));
+            } while (DB::table('cvh_certificates')->where('code', $code)->exists());
+
+            DB::table('cvh_certificates')->insertOrIgnore([
+                'code' => $code,
+                'user_id' => $user->id,
+                'webinar_id' => $courseId,
+                'quiz_id' => $quiz->id,
+                'student_name' => $user->full_name,
+                'course_title' => $quiz->webinar ? $quiz->webinar->title : '',
+                'quiz_title' => $quiz->title,
+                'grade' => $result->user_grade . ($quiz->total_mark ? ' / ' . $quiz->total_mark : ''),
+                'issued_at' => time(),
+            ]);
+            $certificate = DB::table('cvh_certificates')->where('user_id', $user->id)->where('webinar_id', $courseId)->where('quiz_id', $quiz->id)->first();
+        }
+
+        return $this->pdf($certificate)->download('CVH-Certificate-' . Str::slug($certificate->quiz_title ?: $certificate->course_title) . '.pdf');
     }
 
     /** Public verification: form, and result when ?code= is given. */
@@ -137,8 +194,10 @@ class CvhCertificatesController extends Controller
         $body = strtr($template['body'], [
             '[student]' => $certificate->student_name,
             '[student_name]' => $certificate->student_name,
-            '[course]' => $certificate->course_title,
+            // quiz certificates name the assessment (and its course) where the template says [course]
+            '[course]' => !empty($certificate->quiz_id) ? trim($certificate->quiz_title . ($certificate->course_title ? ' (' . $certificate->course_title . ')' : '')) : $certificate->course_title,
             '[course_name]' => $certificate->course_title,
+            '[grade]' => $certificate->grade ?? '',
             '[date]' => dateTimeFormat($certificate->issued_at, 'j F Y', false),
             '[certificate_id]' => $certificate->code,
             '[platform_name]' => getGeneralSettings('site_name') ?: config('cvh_certificate.issuer'),

@@ -132,6 +132,12 @@ class OfflinePaymentController extends Controller
         $this->authorize('admin_offline_payments_reject');
 
         $offlinePayment = OfflinePayment::findOrFail($id);
+
+        // CVH: only waiting requests can be rejected (an approved one has already credited the learner)
+        if ($offlinePayment->status !== OfflinePayment::$waiting) {
+            return back();
+        }
+
         $offlinePayment->update(['status' => OfflinePayment::$reject]);
 
         $notifyOptions = [
@@ -147,6 +153,13 @@ class OfflinePaymentController extends Controller
         $this->authorize('admin_offline_payments_approved');
 
         $offlinePayment = OfflinePayment::findOrFail($id);
+
+        // CVH: claim the request atomically so approving twice (double click, re-opened link) cannot credit twice
+        $claimed = OfflinePayment::query()->where('id', $offlinePayment->id)->where('status', OfflinePayment::$waiting)
+            ->update(['status' => OfflinePayment::$approved]);
+        if (!$claimed) {
+            return back();
+        }
 
         // If type is cart checkout: complete order instead of charging wallet
         if ($offlinePayment->type === OfflinePayment::$typeCart && !empty($offlinePayment->order_id)) {
