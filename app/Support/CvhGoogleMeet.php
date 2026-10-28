@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 /**
  * CVH Africa — Google Meet for live sessions, like the template's Zoom integration: an admin connects CVH's Google
- * account once (Admin → Settings → Google Meet); every session saved with the "Google Meet" API then gets a Google
+ * account once (Admin → Settings → General → Features → Google Meet); every session saved with the "Google Meet" API then gets a Google
  * Calendar event with a Meet link on that account's calendar, kept in step when the session changes or is deleted.
  * Uses Google's OAuth 2.0 and Calendar API v3 over HTTP (no SDK). Settings live in cvh_settings ('google_meet');
  * the event id is stored in sessions.google_event_id (database/cvh/18_google_meet.php).
@@ -23,16 +23,30 @@ class CvhGoogleMeet
     private const TOKEN_URL = 'https://oauth2.googleapis.com/token';
     private const CALENDAR_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary';
 
+    /**
+     * The OAuth client (Client ID / secret) is entered in Settings → General → Features with the Zoom keys; the
+     * connection (refresh token, account) is kept in cvh_settings and only counts for the client it was made with.
+     */
     public static function settings(): array
     {
         $stored = Schema::hasTable('cvh_settings') ? DB::table('cvh_settings')->where('name', 'google_meet')->value('value') : null;
-        return array_merge(['client_id' => '', 'client_secret' => '', 'refresh_token' => '', 'account_email' => '', 'connected_at' => null],
+        $settings = array_merge(['client_id' => '', 'client_secret' => '', 'refresh_token' => '', 'account_email' => '', 'connected_at' => null, 'connected_client_id' => ''],
             json_decode((string)$stored, true) ?: []);
+
+        $featureId = trim((string)getFeaturesSettings('google_meet_client_id'));
+        $featureSecret = trim((string)getFeaturesSettings('google_meet_client_secret'));
+        if ($featureId !== '') {
+            $settings['client_id'] = $featureId;
+            $settings['client_secret'] = $featureSecret;
+        }
+
+        return $settings;
     }
 
     public static function saveSettings(array $values): void
     {
-        $settings = array_merge(self::settings(), $values);
+        $stored = Schema::hasTable('cvh_settings') ? DB::table('cvh_settings')->where('name', 'google_meet')->value('value') : null;
+        $settings = array_merge(json_decode((string)$stored, true) ?: [], $values);
         DB::table('cvh_settings')->updateOrInsert(['name' => 'google_meet'], ['value' => json_encode($settings), 'updated_at' => time()]);
         Cache::forget('cvh_google_meet_token');
     }
@@ -40,7 +54,8 @@ class CvhGoogleMeet
     public static function connected(): bool
     {
         $settings = self::settings();
-        return !empty($settings['client_id']) && !empty($settings['client_secret']) && !empty($settings['refresh_token']);
+        return !empty($settings['client_id']) && !empty($settings['client_secret']) && !empty($settings['refresh_token'])
+            && (empty($settings['connected_client_id']) || $settings['connected_client_id'] === $settings['client_id']);
     }
 
     public static function redirectUri(): string
@@ -86,6 +101,7 @@ class CvhGoogleMeet
             'refresh_token' => $response->json('refresh_token'),
             'account_email' => (string)$calendar->json('id'),
             'connected_at' => time(),
+            'connected_client_id' => $settings['client_id'],
         ]);
         Cache::put('cvh_google_meet_token', $response->json('access_token'), max(60, (int)$response->json('expires_in', 3600) - 120));
     }
@@ -96,7 +112,7 @@ class CvhGoogleMeet
         if ($token) {
             Http::asForm()->timeout(15)->post('https://oauth2.googleapis.com/revoke', ['token' => $token]);
         }
-        self::saveSettings(['refresh_token' => '', 'account_email' => '', 'connected_at' => null]);
+        self::saveSettings(['refresh_token' => '', 'account_email' => '', 'connected_at' => null, 'connected_client_id' => '']);
     }
 
     private static function accessToken(): string
@@ -111,7 +127,7 @@ class CvhGoogleMeet
             ]);
 
             if (!$response->successful()) {
-                throw new \RuntimeException('Google refused the saved connection (' . ($response->json('error') ?? $response->status()) . '). Reconnect the Google account in Settings → Google Meet.');
+                throw new \RuntimeException('Google refused the saved connection (' . ($response->json('error') ?? $response->status()) . '). Reconnect the Google account in Settings → General → Features → Google Meet.');
             }
             return $response->json('access_token');
         });
@@ -135,7 +151,7 @@ class CvhGoogleMeet
     public static function sync(Session $session): void
     {
         if (!self::connected()) {
-            throw new \RuntimeException('Google Meet is not connected yet. Connect CVH’s Google account in Settings → Google Meet.');
+            throw new \RuntimeException('Google Meet is not connected yet. Connect CVH’s Google account in Settings → General → Features → Google Meet.');
         }
 
         if (!empty($session->google_event_id)) {

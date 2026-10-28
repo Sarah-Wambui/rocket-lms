@@ -46,10 +46,9 @@ Route::group(['prefix' => 'cvh-admissions'], function () {
     Route::post('/{id}/{decision}', 'CvhAdmissionsAdminController@decide')->where(['id' => '[0-9]+', 'decision' => 'approve|reject']);
 });
 
-// CVH Africa: Google Meet for live sessions (Settings > Google Meet)
+// CVH Africa: Google Meet for live sessions (settings in Settings > General > Features)
 Route::group(['prefix' => 'cvh-google-meet'], function () {
     Route::get('/', 'CvhGoogleMeetController@index');
-    Route::post('/', 'CvhGoogleMeetController@save');
     Route::get('/connect', 'CvhGoogleMeetController@connect');
     Route::get('/callback', 'CvhGoogleMeetController@callback');
     Route::post('/test', 'CvhGoogleMeetController@test');

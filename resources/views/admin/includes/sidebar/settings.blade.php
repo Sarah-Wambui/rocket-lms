@@ -73,12 +73,4 @@
             <span>{{ trans('admin/main.settings') }}</span>
         </a>
     </li>
-
-    {{-- CVH: Google Meet connection for live sessions --}}
-    <li class="nav-item {{ request()->is(getAdminPanelUrl('/cvh-google-meet*', false)) ? 'active' : '' }}">
-        <a href="{{ getAdminPanelUrl('/cvh-google-meet') }}" class="nav-link">
-            <x-iconsax-bul-video-circle class="icons" width="24px" height="24px"/>
-            <span>Google Meet</span>
-        </a>
-    </li>
 @endcan()

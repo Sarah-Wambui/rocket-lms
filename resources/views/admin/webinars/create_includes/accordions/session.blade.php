@@ -87,7 +87,7 @@
 
                         {{-- CVH: shown when "Google Meet" is selected --}}
                         <div class="js-google-meet-hint text-muted font-12 mb-15 {{ (!empty($session) and $session->session_api == 'google_meet') ? '' : 'd-none' }}">
-                            The Google Meet link is created automatically on CVH's connected Google account when you save (Settings &rarr; Google Meet).
+                            The Google Meet link is created automatically on CVH's connected Google account when you save (Settings &rarr; General &rarr; Features &rarr; Google Meet).
                         </div>
 
                         <div class="form-group js-api-secret {{ (!empty($session) and in_array($session->session_api, ['zoom', 'agora', 'jitsi', 'google_meet'])) ? 'd-none' :'' }}">

@@ -35,9 +35,9 @@ Everything else CVH-specific lives in new files that updates don't touch: `route
 | `app/Models/Session.php` | `$sessionApis` + `google_meet`. |
 | `app/Http/Controllers/Admin/SessionController.php`, `app/Http/Controllers/Panel/SessionController.php` | Google Meet sessions: no password needed; on store/update the Google Calendar event with a Meet link is created/updated (`handleGoogleMeet`, App\Support\CvhGoogleMeet), on delete it is removed; a failure returns the reason under the title and removes a new session. Marked `CVH:`. |
 | `resources/views/admin/webinars/create_includes/accordions/session.blade.php`, `design_1/panel/webinars/create/includes/accordions/session.blade.php` | Google Meet: hint text, link/password fields hidden (small inline script). Marked `CVH:`. |
-| `resources/views/admin/includes/sidebar/settings.blade.php` | "Google Meet" menu item (Admin → Settings → Google Meet: OAuth client, connect/test/disconnect). |
+| `resources/views/admin/settings/general/features.blade.php` | Google Meet API settings below the Zoom ones (`admin/cvh_google_meet/features_section`): Client ID / secret saved with the Features form as `google_meet_client_id` / `google_meet_client_secret`, plus Connect / Test / Disconnect. Marked `CVH:`. |
 
-New: `app/Support/CvhGoogleMeet.php`, `app/Http/Controllers/Admin/CvhGoogleMeetController.php`, view `admin/cvh_google_meet`, `database/cvh/18_google_meet.php` (sessions.google_event_id).
+New: `app/Support/CvhGoogleMeet.php`, `app/Http/Controllers/Admin/CvhGoogleMeetController.php` (connect/callback/test/disconnect), view `admin/cvh_google_meet/features_section`, `database/cvh/18_google_meet.php` (sessions.google_event_id).
 
 ## Quiz certificates and offline payments
 

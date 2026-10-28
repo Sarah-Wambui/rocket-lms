@@ -647,6 +647,9 @@
 
                 </div>
 
+                {{-- CVH: Google Meet API settings (App\Support\CvhGoogleMeet) --}}
+                @include('admin.cvh_google_meet.features_section', ['itemValue' => $itemValue])
+
 
                 <button type="submit" class="btn btn-primary">{{ trans('admin/main.save_change') }}</button>
             </form>

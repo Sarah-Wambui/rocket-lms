@@ -8,47 +8,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 /**
- * CVH Africa: Admin → Settings → Google Meet. Save the Google Cloud OAuth client, connect CVH's Google account
- * (consent screen → callback), test the connection, disconnect. Sessions then use it through App\Support\CvhGoogleMeet.
+ * CVH Africa: the actions behind the Google Meet block in Settings → General → Features (the Client ID / secret
+ * fields there are saved by the Features form itself): connect CVH's Google account (consent screen → callback),
+ * test the connection, disconnect. Sessions then use it through App\Support\CvhGoogleMeet.
  */
 class CvhGoogleMeetController extends Controller
 {
+    /** The settings live in Settings → General → Features. */
+    private function back()
+    {
+        return redirect(getAdminPanelUrl('/settings/general') . '#google-meet');
+    }
+
     public function index()
     {
         $this->authorize('admin_settings');
 
-        $settings = CvhGoogleMeet::settings();
-
-        return view('admin.cvh_google_meet.index', [
-            'pageTitle' => 'Google Meet',
-            'settings' => $settings,
-            'connected' => CvhGoogleMeet::connected(),
-            'redirectUri' => CvhGoogleMeet::redirectUri(),
-            'enabledForSessions' => in_array('google_meet', (array)getFeaturesSettings('available_session_apis')),
-        ]);
-    }
-
-    public function save(Request $request)
-    {
-        $this->authorize('admin_settings');
-
-        $this->validate($request, [
-            'client_id' => 'required|string|max:255',
-            'client_secret' => 'nullable|string|max:255',
-        ]);
-
-        $current = CvhGoogleMeet::settings();
-        $clientId = trim($request->get('client_id'));
-        $secret = trim((string)$request->get('client_secret')) ?: $current['client_secret']; // empty = keep the saved secret
-
-        // A different Google app makes the saved connection useless
-        $changes = ['client_id' => $clientId, 'client_secret' => $secret];
-        if ($clientId !== $current['client_id']) {
-            $changes += ['refresh_token' => '', 'account_email' => '', 'connected_at' => null];
-        }
-        CvhGoogleMeet::saveSettings($changes);
-
-        return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_status', 'Saved. Now click "Connect Google account".');
+        return $this->back();
     }
 
     public function connect(Request $request)
@@ -57,7 +33,7 @@ class CvhGoogleMeetController extends Controller
 
         $settings = CvhGoogleMeet::settings();
         if (empty($settings['client_id']) || empty($settings['client_secret'])) {
-            return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_error', 'Enter and save the Client ID and Client secret first.');
+            return $this->back()->with('cvh_meet_error', 'Enter the Google Meet Client ID and Client secret and click Save changes first.');
         }
 
         $state = Str::random(40);
@@ -72,19 +48,19 @@ class CvhGoogleMeetController extends Controller
 
         $expected = $request->session()->pull('cvh_google_meet_state');
         if (!$expected || !hash_equals($expected, (string)$request->get('state'))) {
-            return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_error', 'The Google sign-in expired. Please click "Connect Google account" again.');
+            return $this->back()->with('cvh_meet_error', 'The Google sign-in expired. Please click "Connect Google account" again.');
         }
         if ($request->get('error')) {
-            return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_error', 'Google access was not granted (' . $request->get('error') . ').');
+            return $this->back()->with('cvh_meet_error', 'Google access was not granted (' . $request->get('error') . ').');
         }
 
         try {
             CvhGoogleMeet::connect((string)$request->get('code'));
         } catch (\Throwable $exception) {
-            return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_error', $exception->getMessage());
+            return $this->back()->with('cvh_meet_error', $exception->getMessage());
         }
 
-        return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_status', 'Google account connected.');
+        return $this->back()->with('cvh_meet_status', 'Google account connected. Click "Test connection" to check it.');
     }
 
     public function test()
@@ -94,10 +70,10 @@ class CvhGoogleMeetController extends Controller
         try {
             $link = CvhGoogleMeet::test();
         } catch (\Throwable $exception) {
-            return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_error', $exception->getMessage());
+            return $this->back()->with('cvh_meet_error', $exception->getMessage());
         }
 
-        return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_status', "Working: Google created a test meeting ({$link}) and it was removed again.");
+        return $this->back()->with('cvh_meet_status', "Working: Google created a test meeting ({$link}) and it was removed again.");
     }
 
     public function disconnect()
@@ -106,6 +82,6 @@ class CvhGoogleMeetController extends Controller
 
         CvhGoogleMeet::disconnect();
 
-        return redirect(getAdminPanelUrl('/cvh-google-meet'))->with('cvh_meet_status', 'Google account disconnected. New Google Meet sessions cannot be created until you connect again.');
+        return $this->back()->with('cvh_meet_status', 'Google account disconnected. New Google Meet sessions cannot be created until you connect again.');
     }
 }
