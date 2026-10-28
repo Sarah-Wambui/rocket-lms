@@ -27,6 +27,13 @@ class CronJobsController extends Controller
 {
     public function index(Request $request, $methodName)
     {
+        // CVH: these URLs were open to anyone and could call any method here (including testSMS and
+        // makeUsersTableUsername). The jobs now run from cron via `php artisan cvh:reminders`; the URLs work only with
+        // ?key= matching CRON_JOBS_KEY in .env, and only for the real jobs.
+        $key = (string)config('app.cron_jobs_key', env('CRON_JOBS_KEY', ''));
+        abort_if($key === '' || !hash_equals($key, (string)$request->get('key')), 404);
+        abort_if(in_array($methodName, ['index', 'sdfds', 'makeUsersTableUsername', 'testSMS'], true) || !method_exists($this, $methodName), 404);
+
         return $this->$methodName($request);
     }
 

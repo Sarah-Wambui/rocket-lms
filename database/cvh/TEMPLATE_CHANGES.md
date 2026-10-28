@@ -25,6 +25,13 @@ Everything else CVH-specific lives in new files that updates don't touch: `route
 
 `database/cvh/15_paystack_channel.php` registers the Paystack gateway (the database only listed PayPal, PayU and Razorpay).
 
+## Scheduled jobs (reminders)
+
+| File | Change |
+|---|---|
+| `app/Console/Commands/CvhRunReminders.php` (new) | `php artisan cvh:reminders`, run hourly from cron: live-class, meeting and subscription reminders every N hours (N = Admin → Settings → General → Reminders), subscription renewal daily. Installments/gifts/events/abandoned carts are not scheduled. |
+| `app/Http/Controllers/Web/CronJobsController.php` | `index()`: the public `/cron-jobs/{method}` URLs (open to anyone, could call `testSMS`, `makeUsersTableUsername`) now need `?key=` = `CRON_JOBS_KEY` from `.env` and never run those two. Marked `CVH:`. |
+
 ## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
 
 Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.
@@ -45,5 +52,6 @@ Only the top-level page views were placeholders; the controllers, routes, sub-vi
 | `resources/views/admin/webinars/assignments/lists.blade.php` | Admin → Assignments |
 | `resources/views/admin/webinars/course_statistics/index.blade.php` | Admin → Course statistics |
 | `resources/views/admin/webinars/personal_notes/index.blade.php` | Admin → Course notes (needs the Course notes feature switched on) |
+| `resources/views/admin/financial/subscribes/lists.blade.php`, `create/index.blade.php` | Admin → Financial → Subscriptions (plans; sales column counts plan purchases only) |
 
 Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced by Admin → Course Forum = `/admin/cvh-course-qa`), site forum admin (`admin/forums/*`, the public forum is `/community`), certificate templates (the PDF design is `config/cvh_certificate.php`), and the selling/payments features.
