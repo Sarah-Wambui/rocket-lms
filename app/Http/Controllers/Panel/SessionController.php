@@ -28,7 +28,7 @@ class SessionController extends Controller
             'date' => 'required|date',
             'duration' => 'required|numeric',
             'link' => ($data['session_api'] == 'local') ? 'required|url' : 'nullable',
-            'api_secret' => (in_array($data['session_api'], ['zoom', 'agora', 'jitsi'])) ? 'nullable' : 'required',
+            'api_secret' => (in_array($data['session_api'], ['zoom', 'agora', 'jitsi', 'google_meet'])) ? 'nullable' : 'required', // CVH: + google_meet
             'moderator_secret' => ($data['session_api'] == 'big_blue_button') ? 'required' : 'nullable',
         ]);
 
@@ -102,6 +102,11 @@ class SessionController extends Controller
                     'title' => $data['title'],
                     'description' => $data['description'],
                 ]);
+            }
+
+            // CVH: Google Meet sessions get their Meet link from CVH's connected Google account
+            if ($data['session_api'] == 'google_meet' and ($meetError = $this->handleGoogleMeet($session, true))) {
+                return $meetError;
             }
 
             if ($data['session_api'] == 'big_blue_button') {
@@ -242,6 +247,11 @@ class SessionController extends Controller
                     'description' => $data['description'],
                 ]);
 
+                // CVH: move/rename the Google Meet event with the session
+                if ($session_api == 'google_meet' and ($meetError = $this->handleGoogleMeet($session, false))) {
+                    return $meetError;
+                }
+
                 if ($changeChapter) {
                     WebinarChapterItem::changeChapter($session->creator_id, $oldChapterId, $session->chapter_id, $session->id, WebinarChapterItem::$chapterSession);
                 }
@@ -273,6 +283,8 @@ class SessionController extends Controller
                     ->where('item_id', $session->id)
                     ->where('type', WebinarChapterItem::$chapterSession)
                     ->delete();
+
+                    \App\Support\CvhGoogleMeet::remove($session); // CVH
 
                 $session->delete();
             }
@@ -807,5 +819,24 @@ class SessionController extends Controller
         $signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
 
         return "$header.$payload.$signature";
+    }
+
+    /** CVH: create/update the session's Google Calendar event with a Meet link; null when fine, else a 422 response. */
+    private function handleGoogleMeet($session, bool $isNew)
+    {
+        try {
+            \App\Support\CvhGoogleMeet::sync(Session::query()->find($session->id));
+            return null;
+        } catch (\Throwable $exception) {
+            if ($isNew) {
+                SessionTranslation::where('session_id', $session->id)->delete();
+                $session->delete();
+            }
+
+            return response([
+                'code' => 422,
+                'errors' => ['title' => [$exception->getMessage()]],
+            ], 422);
+        }
     }
 }

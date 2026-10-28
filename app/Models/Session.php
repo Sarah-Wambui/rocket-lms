@@ -23,7 +23,7 @@ class Session extends Model implements TranslatableContract
     static $Inactive = 'inactive';
     static $Status = ['active', 'inactive'];
 
-    static $sessionApis = ['local', 'big_blue_button', 'zoom', 'agora', 'jitsi'];
+    static $sessionApis = ['local', 'big_blue_button', 'zoom', 'agora', 'jitsi', 'google_meet']; // CVH: + google_meet (App\Support\CvhGoogleMeet)
 
 
     public $translatedAttributes = ['title', 'description'];
