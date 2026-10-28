@@ -46,7 +46,7 @@
     </div>
 
     @if(!$cvhMeetOffered)
-        <p class="text-warning font-12 mt-2 mb-0">To offer it in the live session form, also select <b>Google Meet</b> under <b>Available session APIs</b> above and save.</p>
+        <p class="text-warning font-12 mt-2 mb-0">To offer it in the live session form, also pick <b>Google Meet</b> under <b>Live Class Providers → Select Available Providers</b> above and click <b>Save changes</b>.</p>
     @endif
 </div>
 
