@@ -1656,7 +1656,7 @@ return [
 
     // Session APIs
     'session_api' => 'Live Class Providers',
-    'session_api_local' => 'Custom (Local)',
+    'session_api_local' => 'Google Meet (paste link)', // CVH: was 'Custom (Local)'; any meeting link works
     'session_api_big_blue_button' => 'BigBlueButton',
     'session_api_zoom' => 'Zoom',
     'session_api_agora' => 'Agora',

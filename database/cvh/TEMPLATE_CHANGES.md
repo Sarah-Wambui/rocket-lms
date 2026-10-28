@@ -27,6 +27,12 @@ Everything else CVH-specific lives in new files that updates don't touch: `route
 
 `database/cvh/15_paystack_channel.php` registers the Paystack gateway (the database only listed PayPal, PayU and Razorpay).
 
+## Live sessions
+
+| File | Change |
+|---|---|
+| `lang/en/update.php` | `session_api_local` label "Custom (Local)" -> "Google Meet (paste link)": CVH runs live classes on Google Meet by pasting the meeting link into the session. |
+
 ## Quiz certificates and offline payments
 
 | File | Change |
