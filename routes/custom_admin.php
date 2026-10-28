@@ -37,6 +37,15 @@ $prefix = getAdminPanelUrlPrefix();
 Route::get('/cvh-course-qa', 'CvhCourseQaAdminController@index');
 Route::post('/cvh-course-qa/{id}/delete', 'CvhCourseQaAdminController@destroy')->where('id', '[0-9]+');
 
+// CVH Africa: admissions (Users > Admissions)
+Route::group(['prefix' => 'cvh-admissions'], function () {
+    Route::get('/', 'CvhAdmissionsAdminController@index');
+    Route::get('/export', 'CvhAdmissionsAdminController@export');
+    Route::post('/settings', 'CvhAdmissionsAdminController@saveSettings');
+    Route::post('/{id}/mark-paid', 'CvhAdmissionsAdminController@markPaid')->where('id', '[0-9]+');
+    Route::post('/{id}/{decision}', 'CvhAdmissionsAdminController@decide')->where(['id' => '[0-9]+', 'decision' => 'approve|reject']);
+});
+
 // CVH Africa: in-house Homepage Editor (Appearance > Homepage Editor)
 Route::group(['prefix' => 'cvh-homepage'], function () {
     Route::get('/', 'CvhHomepageController@index');

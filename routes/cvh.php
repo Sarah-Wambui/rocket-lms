@@ -42,5 +42,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::group(['middleware' => 'web.auth'], function () {
         Route::get('/my-certificates', 'CvhCertificatesController@index');
         Route::get('/my-certificates/{webinarId}/download', 'CvhCertificatesController@download')->where('webinarId', '[0-9]+');
+
+        // Admission (application form -> admission fee -> approval)
+        Route::get('/admission', 'CvhAdmissionController@index');
+        Route::post('/admission/pay', 'CvhAdmissionController@pay')->middleware('throttle:10,1');
+        Route::get('/admission/payment/verify', 'CvhAdmissionController@verify');
     });
 });

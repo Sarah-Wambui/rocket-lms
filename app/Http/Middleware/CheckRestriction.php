@@ -31,6 +31,11 @@ class CheckRestriction
             return redirect(route('restrictionRoute'));
         }
 
+        // CVH: learners who still have to complete admission cannot enrol, check out or open course content
+        if ($admissionRedirect = \App\Support\CvhAdmission::gate($request)) {
+            return $admissionRedirect;
+        }
+
         return $next($request);
     }
 

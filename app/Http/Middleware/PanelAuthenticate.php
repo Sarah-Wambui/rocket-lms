@@ -32,6 +32,10 @@ class PanelAuthenticate
 
             view()->share('panelNavbarLinks', $this->getNavbarLinks());
 
+            // CVH: learners who still have to complete admission cannot buy subscription plans
+            if ($admissionRedirect = \App\Support\CvhAdmission::gate($request)) {
+                return $admissionRedirect;
+            }
 
             return $next($request);
         }

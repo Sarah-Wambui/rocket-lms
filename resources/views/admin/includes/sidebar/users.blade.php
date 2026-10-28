@@ -61,6 +61,15 @@
     </li>
 @endcan
 
+{{-- CVH: admission workflow (application form -> admission fee -> approval) --}}
+@can('admin_users_list')
+    <li class="{{ (request()->is(getAdminPanelUrl('/cvh-admissions*', false))) ? 'active' : '' }}">
+        <a class="nav-link" href="{{ getAdminPanelUrl('/cvh-admissions') }}">
+            <x-iconsax-bul-user-tick class="icons" width="24px" height="24px"/>
+            <span>Admissions</span>
+        </a>
+    </li>
+@endcan
 
 @can('admin_users_not_access_content_lists')
     <li class="{{ (request()->is(getAdminPanelUrl('/users/not-access-to-content', false))) ? 'active' : '' }}">

@@ -25,6 +25,16 @@ Everything else CVH-specific lives in new files that updates don't touch: `route
 
 `database/cvh/15_paystack_channel.php` registers the Paystack gateway (the database only listed PayPal, PayU and Razorpay).
 
+## Admissions
+
+New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionController.php` (/admission, fee via Paystack), `app/Http/Controllers/Admin/CvhAdmissionsAdminController.php` (Admin → Users → Admissions), views `design_1/web/cvh_admission`, `admin/cvh_admissions`, tables from `database/cvh/16_admissions.php`.
+
+| Template file | Change |
+|---|---|
+| `app/Http/Middleware/CheckRestriction.php` | Calls `CvhAdmission::gate()`: learners who must complete admission are sent to /admission instead of enrolling, checking out or opening course content. Marked `CVH:`. |
+| `app/Http/Middleware/PanelAuthenticate.php` | Same check for buying subscription plans in the dashboard. Marked `CVH:`. |
+| `resources/views/admin/includes/sidebar/users.blade.php` | "Admissions" menu item. Marked `CVH:`. |
+
 ## Scheduled jobs (reminders)
 
 | File | Change |
