@@ -162,7 +162,8 @@ class PaymentController extends Controller
             return Redirect::away($redirect_url);
 
         } catch (\Exception $exception) {
-            //dd($exception->getMessage());
+            // CVH: keep the gateway's reason (wrong keys, unsupported currency, ...) in storage/logs/laravel.log
+            \Illuminate\Support\Facades\Log::warning("Payment start failed ({$paymentChannel->class_name}, order {$order->id}): " . $exception->getMessage());
 
             $toastData = [
                 'title' => trans('cart.fail_purchase'),

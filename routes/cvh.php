@@ -37,6 +37,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::post('/qa/action', 'CvhCourseQaController@action');
     });
 
+    // GET on the POST-only checkout URL (a failed payment start returns "back" to it): go to the cart, no redirect loop.
+    // The */direct-payment ones are in routes/web.php, ahead of the /{slug} routes that would otherwise catch them.
+    Route::get('/cart/checkout', 'CvhCheckoutRedirectController');
+
     // Certificates of completion (in-house; the template's certificate plugin is not used)
     Route::get('/certificates/verify', 'CvhCertificatesController@verify');
     Route::group(['middleware' => 'web.auth'], function () {

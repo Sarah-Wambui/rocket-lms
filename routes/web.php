@@ -116,6 +116,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::post('/get-advertising-modal', 'AdvertisingModalController@getModal');
 
     Route::group(['prefix' => 'course'], function () {
+        // CVH: before /{slug} so a GET here (failed payment start returning "back") goes to the cart instead of looping
+        Route::get('/direct-payment', 'CvhCheckoutRedirectController');
         Route::get('/{slug}', 'WebinarController@course');
         Route::get('/{slug}/file/{file_id}/download', 'WebinarController@downloadFile');
         Route::get('/{slug}/file/{file_id}/showHtml', 'WebinarController@showHtmlFile');
@@ -386,6 +388,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
     Route::group(['prefix' => 'products'], function () {
         Route::get('/', 'ProductController@index');
+        // CVH: before /{slug} so a GET here (failed payment start returning "back") goes to the cart instead of looping
+        Route::get('/direct-payment', 'CvhCheckoutRedirectController');
         Route::get('/{slug}', 'ProductController@show');
         Route::post('/{slug}/points/apply', 'ProductController@buyWithPoint');
         Route::get('/{slug}/files', 'ProductController@showFiles');
@@ -410,6 +414,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
     Route::group(['prefix' => 'bundles'], function () {
         Route::get('/', 'BundleController@index');
+        // CVH: before /{slug} so a GET here (failed payment start returning "back") goes to the cart instead of looping
+        Route::get('/direct-payment', 'CvhCheckoutRedirectController');
         Route::get('/{slug}', 'BundleController@show');
         Route::get('/{slug}/free', 'BundleController@free');
 
