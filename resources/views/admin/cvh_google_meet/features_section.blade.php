@@ -37,9 +37,9 @@
             <a href="{{ getAdminPanelUrl('/cvh-google-meet/connect') }}" class="btn btn-sm btn-outline-primary mr-1">Reconnect / another account</a>
             <button type="submit" form="cvhMeetDisconnectForm" class="btn btn-sm btn-outline-danger" onclick="return confirm('Disconnect Google Meet? Existing Meet links keep working; new Google Meet sessions cannot be created.')">Disconnect</button>
         @elseif(!empty($cvhMeet['client_id']) and !empty($cvhMeet['client_secret']))
-            <p class="mb-2">Not connected yet.</p>
-            <a href="{{ getAdminPanelUrl('/cvh-google-meet/connect') }}" class="btn btn-sm btn-primary">Connect Google account</a>
-            <span class="text-muted font-12 ml-2">Sign in with the Google account that hosts the classes and allow calendar access.</span>
+            <p class="mb-1"><b>Keys saved. One last step:</b> sign in to Google once so the site can create meetings on that account.</p>
+            <p class="mb-2 text-muted font-12">The Client ID and secret identify the site to Google; Google still needs the hosting account’s permission (sign in → Allow).</p>
+            <a href="{{ getAdminPanelUrl('/cvh-google-meet/connect') }}" class="btn btn-primary">Connect Google account</a>
         @else
             <p class="mb-0 text-muted">Enter the Client ID and Client secret, click <b>Save changes</b> below, then come back here to connect the Google account.</p>
         @endif

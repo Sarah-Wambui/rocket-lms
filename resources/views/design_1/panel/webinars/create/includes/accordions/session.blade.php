@@ -72,11 +72,6 @@
                 'extraData' => "data-webinar-id='".(!empty($webinar) ? $webinar->id : '')."'  data-id='".(!empty($session) ? $session->id : '')."'  data-relation='sessions' data-fields='title,description'"
             ])
 
-            {{-- CVH: shown when "Google Meet" is selected --}}
-            <div class="js-google-meet-hint text-gray-500 font-12 mt-12 {{ (!empty($session) and $session->session_api == 'google_meet') ? '' : 'd-none' }}">
-                The Google Meet link is created automatically when you save.
-            </div>
-
             <div class="form-group js-api-secret {{ (!empty($session) and in_array($session->session_api, ['zoom', 'agora', 'jitsi', 'google_meet'])) ? 'd-none' :'' }}">
                 <label class="form-group-label">{{ trans('auth.password') }}</label>
                 <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][api_secret]" class="js-ajax-api_secret form-control" value="{{ !empty($session) ? $session->api_secret : '' }}" {{ (!empty($session) and $session->session_api != 'local') ? 'disabled' :'' }}/>
@@ -250,7 +245,6 @@
                 function cvhToggleGoogleMeet(input) {
                     var form = $(input).closest('.session-form');
                     var isMeet = input.value === 'google_meet';
-                    form.find('.js-google-meet-hint').toggleClass('d-none', !isMeet);
                     if (isMeet) {
                         var isNew = !form.find('.js-ajax-link').val();
                         form.find('.js-api-secret, .js-moderator-secret').addClass('d-none');

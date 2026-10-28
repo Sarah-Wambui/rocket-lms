@@ -181,7 +181,7 @@ class CvhGoogleMeet
     public static function sync(Session $session): void
     {
         if (!self::connected()) {
-            throw new \RuntimeException('Google Meet is not connected yet. Connect CVH’s Google account in Settings → General → Features → Google Meet.');
+            throw new \RuntimeException('Google Meet is not connected yet: in Settings → General → Features → Google Meet API Settings, click “Connect Google account” and allow access.');
         }
 
         if (!empty($session->google_event_id)) {
