@@ -12,7 +12,8 @@
  * ({"<recordingId>": "<YouTube or other video link>"}).
  *
  * A TrainerCentral course goes into the LMS course with the same slug, and only when that course has no content yet
- * (so the courses migrated from the old Rocket site are never doubled). Sections become chapters; a lesson's rich text
+ * (so the courses migrated from the old Rocket site are never doubled); one the LMS does not have is created (free,
+ * taught by the admin, in the Food Safety or Agripreneurship category, with its TrainerCentral cover from files/thumbs/). Sections become chapters; a lesson's rich text
  * becomes a text lesson, its PDFs/documents downloadable files (copied to public/store/trainercentral/<slug>/), its
  * recording a video lesson when recordings.json has a link for it, and its test a quiz. Every row made is recorded in
  * cvh_import_map (source "tc:<table>") so --undo removes exactly that.
@@ -28,6 +29,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 const TEXT = '10', PRESENTATION = '5', DOCUMENT = '11', RECORDING = '8';
+const FOOD_SAFETY = 612, AGRIPRENEURSHIP = 613; // the CVH categories (database/cvh/02_content.php)
+// TrainerCentral courses the old Rocket site already had under another address (migrated with their content)
+const SAME_AS = ['irish-potato-production' => 'irish-potato-production-course-2', 'maize-production' => 'a-comprehensive-guide-to-maize-production'];
 
 if (!Schema::hasTable('cvh_import_map')) {
     Schema::create('cvh_import_map', function ($t) {
@@ -45,7 +49,7 @@ if (!Schema::hasTable('cvh_import_map')) {
 if (in_array('--undo', $argv, true)) {
     $order = ['quizzes_questions_answer_translations', 'quizzes_questions_answers', 'quiz_question_translations', 'quizzes_questions',
         'quiz_translations', 'quizzes', 'webinar_chapter_items', 'file_translations', 'files', 'text_lesson_translations', 'text_lessons',
-        'webinar_chapter_translations', 'webinar_chapters'];
+        'webinar_chapter_translations', 'webinar_chapters', 'webinars'];
     $total = 0;
     foreach ($order as $table) {
         $ids = DB::table('cvh_import_map')->where('source', "tc:{$table}")->pluck('new_id');
@@ -111,11 +115,40 @@ $fileType = function (string $path): array {
 $summary = [];
 foreach ($courses as $c) {
     $course = $c['course'];
+    $created = false;
     $slug = $course['uniqueKey'] ?? '';
     $webinar = DB::table('webinars')->where('slug', $slug)->whereNull('deleted_at')->first();
-    $title = $course['courseName'] ?? $slug;
-    if (!$webinar) { $summary[] = ['skip', $title, 'not in the LMS']; continue; }
-    if ($hasContent($webinar->id)) { $summary[] = ['skip', $title, 'already has content']; continue; }
+    $title = trim($course['courseName'] ?? $slug);
+    if (isset(SAME_AS[$slug])) $webinar = DB::table('webinars')->where('slug', SAME_AS[$slug])->whereNull('deleted_at')->first();
+    if (!$webinar && empty($c['sessionInfos']['sessions'])) { $summary[] = ['skip', $title, 'empty on TrainerCentral too']; continue; }
+    $importable = collect($c['sessionInfos']['sessions'] ?? [])->contains(function ($lesson) use ($materials, $docs, $recordings, $tests) {
+        foreach ($materials[$lesson['id']]['materials'] ?? [] as $m) {
+            if ($m['materialType'] === TEXT || isset($docs[$m['materialId']]) || isset($recordings[$m['recordingId'] ?? $m['materialId']])) return true;
+        }
+        return collect($tests)->where('sessionId', $lesson['id'])->isNotEmpty();
+    });
+    if (!$webinar && !$importable) { $summary[] = ['skip', $title, 'only a recording: add its link to recordings.json first']; continue; }
+    if (!$webinar) {
+        // a TrainerCentral course the LMS does not have yet: create it like the other CVH courses (free, admin-taught)
+        $thumb = collect(glob("{$dir}/files/thumbs/{$course['courseId']}.*") ?: [])->first();
+        $image = null;
+        if ($thumb) {
+            $image = "/store/trainercentral/covers/{$slug}." . pathinfo($thumb, PATHINFO_EXTENSION);
+            if ($apply) { @mkdir(dirname(public_path($image)), 0755, true); copy($thumb, public_path($image)); }
+        }
+        $id = $put('webinars', ['teacher_id' => 1, 'creator_id' => 1, 'category_id' => preg_match('/food|processing/i', $title) ? FOOD_SAFETY : AGRIPRENEURSHIP,
+            'type' => 'course', 'private' => 0, 'slug' => $slug, 'timezone' => 'Africa/Nairobi', 'thumbnail' => $image, 'image_cover' => $image,
+            'support' => 1, 'certificate' => 1, 'downloadable' => 0, 'partner_instructor' => 0, 'subscribe' => 0, 'forum' => 1, 'chat_room' => 0,
+            'status' => 'active', 'created_at' => $now, 'updated_at' => $now], $course['courseId']);
+        $about = $cleanHtml($course['description'] ?? '');
+        $plain = Str::limit(trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($about)))), 250) ?: $title;
+        if ($apply) {
+            DB::table('webinar_translations')->insert(['webinar_id' => $id, 'locale' => 'en', 'title' => Str::limit($title, 250, ''),
+                'seo_description' => Str::limit($plain, 250), 'summary' => $plain, 'description' => $about ?: "<p>{$title}</p>"]);
+        }
+        $webinar = (object)['id' => $id, 'slug' => $slug, 'teacher_id' => 1, 'creator_id' => 1];
+        $created = true;
+    } elseif ($hasContent($webinar->id)) { $summary[] = ['skip', $title, 'already has content']; continue; }
 
     $teacher = $webinar->teacher_id ?: $webinar->creator_id;
     $sections = collect($c['sections']['sections'] ?? [])->sortBy(fn($s) => (int)$s['sectionIndex'])->values();
@@ -211,7 +244,7 @@ foreach ($courses as $c) {
             }
         }
     }
-    $summary[] = ['fill', $title, $counts];
+    $summary[] = [$created ? 'new' : 'fill', $title, $counts];
 }
 
 foreach ($summary as [$action, $title, $info]) {
