@@ -8,14 +8,15 @@
  *
  * <export-dir> is the folder the TrainerCentral export made: all_courses.json (courses, sections, lessons),
  * materials.json (each lesson's text / files / recordings), files/docs/<materialId>-<name> (the downloaded PDFs and
- * documents), and optionally tests.json (the tests, see trainercentral_tests format below) and recordings.json
- * ({"<recordingId>": "<YouTube or other video link>"}).
+ * documents), files/recordings/<recordingId>.mp4 (the downloaded recordings, served from this server), and optionally
+ * tests.json (the tests, see trainercentral_tests format below) and recordings.json ({"<recordingId>": "<YouTube or
+ * other video link>"}, used instead of the downloaded file).
  *
  * A TrainerCentral course goes into the LMS course with the same slug, and only when that course has no content yet
  * (so the courses migrated from the old Rocket site are never doubled); one the LMS does not have is created (free,
  * taught by the admin, in the Food Safety or Agripreneurship category, with its TrainerCentral cover from files/thumbs/). Sections become chapters; a lesson's rich text
  * becomes a text lesson, its PDFs/documents downloadable files (copied to public/store/trainercentral/<slug>/), its
- * recording a video lesson when recordings.json has a link for it, and its test a quiz. Every row made is recorded in
+ * recording a video lesson (copied to public/store/trainercentral/<slug>/, or the recordings.json link), and its test a quiz. Every row made is recorded in
  * cvh_import_map (source "tc:<table>") so --undo removes exactly that.
  */
 
@@ -75,6 +76,9 @@ $docs = [];
 foreach (glob("{$dir}/files/docs/*") ?: [] as $path) {
     if (preg_match('/^(\d+)-/', basename($path), $m)) $docs[$m[1]] = $path;
 }
+foreach (glob("{$dir}/files/recordings/*.mp4") ?: [] as $path) {
+    $recordings[pathinfo($path, PATHINFO_FILENAME)] ??= $path;
+}
 
 $now = time();
 $put = function (string $table, array $row, $tcId = null) use ($apply): int {
@@ -127,7 +131,7 @@ foreach ($courses as $c) {
         }
         return collect($tests)->where('sessionId', $lesson['id'])->isNotEmpty();
     });
-    if (!$webinar && !$importable) { $summary[] = ['skip', $title, 'only a recording: add its link to recordings.json first']; continue; }
+    if (!$webinar && !$importable) { $summary[] = ['skip', $title, 'only a recording: download it to files/recordings/ or add its link to recordings.json first']; continue; }
     if (!$webinar) {
         // a TrainerCentral course the LMS does not have yet: create it like the other CVH courses (free, admin-taught)
         $thumb = collect(glob("{$dir}/files/thumbs/{$course['courseId']}.*") ?: [])->first();
@@ -205,9 +209,22 @@ foreach ($courses as $c) {
                 } elseif ($m['materialType'] === RECORDING) {
                     $link = $recordings[$m['recordingId'] ?? $m['materialId']] ?? null;
                     if (!$link) { $counts['missing']++; continue; }
-                    $storage = preg_match('/youtu\.?be/i', $link) ? 'youtube' : (preg_match('/vimeo/i', $link) ? 'vimeo' : 'external_link');
+                    $volume = 0;
+                    $type = 'video';
+                    if (is_file($link)) {
+                        // a downloaded recording: hard-linked into public/store (no second copy on disk) or copied
+                        $rel = "/store/trainercentral/{$webinar->slug}/" . Str::slug($lesson['name']) . "-{$m['recordingId']}.mp4";
+                        if ($apply) {
+                            @mkdir(dirname(public_path($rel)), 0755, true);
+                            @unlink(public_path($rel));
+                            @link($link, public_path($rel)) || copy($link, public_path($rel));
+                        }
+                        [$storage, $volume, $type, $link] = ['upload', round(filesize($link) / 1048576, 2), 'mp4', $rel];
+                    } else {
+                        $storage = preg_match('/youtu\.?be/i', $link) ? 'youtube' : (preg_match('/vimeo/i', $link) ? 'vimeo' : 'external_link');
+                    }
                     $id = $put('files', ['creator_id' => $teacher, 'webinar_id' => $webinar->id, 'chapter_id' => $chapterId, 'accessibility' => 'paid',
-                        'downloadable' => 0, 'storage' => $storage, 'file' => $link, 'volume' => 0, 'file_type' => 'video',
+                        'downloadable' => 0, 'storage' => $storage, 'file' => $link, 'volume' => $volume, 'file_type' => $type,
                         'check_previous_parts' => 0, 'online_viewer' => 0, 'order' => $order + 1, 'status' => 'active', 'created_at' => $now], $m['materialId']);
                     if ($apply) {
                         DB::table('file_translations')->insert(['file_id' => $id, 'locale' => 'en', 'title' => Str::limit($lesson['name'] . ' (recording)', 250, ''), 'description' => $lesson['name']]);
