@@ -32,7 +32,10 @@
             <style>
                 .cvh-tapes { overflow: hidden; padding: 48px 0; }
                 .cvh-tapes .marquee-swiper { display: flex; overflow: hidden; }
-                .cvh-tapes .marquee-swiper + .marquee-swiper { margin-top: -40px; }
+                .cvh-tapes .marquee-swiper + .marquee-swiper { margin-top: 12px; }
+                /* both bands at the same angle so they run side by side instead of crossing over each other's text */
+                .cvh-tapes.taps-with-rotate .marquee-swiper.primary-tape,
+                .cvh-tapes.taps-with-rotate .marquee-swiper.secondary-tape { transform: rotate(-2deg); }
                 .cvh-tapes__track { display: flex; flex-shrink: 0; width: max-content; animation: cvh-tapes-scroll 80s linear infinite; }
                 .cvh-tapes .secondary-tape .cvh-tapes__track { animation-direction: reverse; }
                 .cvh-tapes .swiper-slide { padding-right: 32px; }
