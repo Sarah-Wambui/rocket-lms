@@ -92,11 +92,7 @@ Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced b
 
 ## Homepage like the original demo
 
-| File | Change |
-|---|---|
-| `resources/views/landingBuilder/front/components/trending_categories/index.blade.php` | Trending Categories flow across the page in a loop (pauses on hover, static for reduced motion) instead of a static grid. Marked `CVH:`. |
-
-New: `resources/views/landingBuilder/front/components/upcoming_courses/index.blade.php` (this template version shipped only the admin form and stylesheet of Upcoming Courses). `cvh_partners` now shows all partner logos together in one "Official Organizations" panel. `database/cvh/24_homepage_like_original.php` switches the sections on, orders them like the demo and sets their headings.
+No template file changed. New front views for components this template version shipped only with an admin form and stylesheet (each starts with a `{{-- CVH: ... --}}` comment): `resources/views/landingBuilder/front/components/features_4x`, `links_and_titles_slider_2_rows` (scrolling bands of links; with no items set they list every enabled course category) and `upcoming_courses`. `cvh_partners` shows all partner logos together in one "Official Organizations" panel. `database/cvh/24_homepage_like_original.php` adds the missing sections, orders them like the demo and sets their headings.
 
 ## Live class metrics (Google Meet)
 

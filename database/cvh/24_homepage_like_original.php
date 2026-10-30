@@ -1,9 +1,10 @@
 <?php
 /**
  * CVH Africa — homepage sections in the order and style of the original Rocket LMS demo (lms.rocket-soft.org):
- *   Hero, Statistics, Featured Courses, Trending Categories (now flowing across the page, where the partner strip was),
- *   Bestsellers (back on), Upcoming Courses (new), Free Courses, Expert Instructors, Official Organizations
- *   (the partner logos as cards), then any other sections already on the page, then the Blog.
+ *   Hero, Statistics, Features, Featured Courses, Trending Categories, Bestsellers, Top Rated, the scrolling
+ *   bands of all course categories, Upcoming Courses, Free Courses, Expert Instructors, Official Organizations
+ *   (all partner logos in one panel), then any other sections already on the page, then the Blog.
+ * Sections the page does not have yet (Features, category bands, Upcoming) are added.
  * Each section keeps the spacer that follows it. Sections not in that list keep their on/off state.
  * Run from the project root:  php database/cvh/24_homepage_like_original.php   (re-runnable)
  */
@@ -15,8 +16,8 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 use Illuminate\Support\Facades\DB;
 
 const ORDER = [
-    'two_columns_hero', 'statistics', 'featured_courses', 'trending_categories', 'best_selling_courses',
-    'upcoming_courses', 'free_courses', 'instructors', 'cvh_partners',
+    'two_columns_hero', 'statistics', 'features_4x', 'featured_courses', 'trending_categories', 'best_selling_courses',
+    'best_rated_courses', 'links_and_titles_slider_2_rows', 'upcoming_courses', 'free_courses', 'instructors', 'cvh_partners',
 ];
 const LAST = 'blog';
 
@@ -37,8 +38,10 @@ DB::transaction(function () {
     }
 
     $typeIds = DB::table('landing_builder_components')->pluck('id', 'name');
-    if (!isset($typeIds['upcoming_courses'])) {
-        $typeIds['upcoming_courses'] = DB::table('landing_builder_components')->insertGetId(['name' => 'upcoming_courses', 'category' => 'courses']);
+    foreach (['features_4x' => 'information', 'links_and_titles_slider_2_rows' => 'miscellaneous', 'upcoming_courses' => 'courses'] as $name => $category) {
+        if (!isset($typeIds[$name])) {
+            $typeIds[$name] = DB::table('landing_builder_components')->insertGetId(['name' => $name, 'category' => $category]);
+        }
     }
     $typeNames = $typeIds->flip();
     $spacerTypeId = $typeIds['vertical_spacer'];
@@ -54,10 +57,13 @@ DB::transaction(function () {
         }
     }
 
-    // Upcoming Courses is new: add it with a spacer copied from an existing one.
-    if (!collect($groups)->contains('name', 'upcoming_courses')) {
-        $upcomingId = DB::table('landing_components')->insertGetId([
-            'landing_id' => $landingId, 'component_id' => $typeIds['upcoming_courses'], 'preview' => null, 'enable' => 1, 'order' => 0,
+    // Sections the page does not have yet: add each with a spacer copied from an existing one.
+    foreach (ORDER as $name) {
+        if (collect($groups)->contains('name', $name) or !isset($typeIds[$name])) {
+            continue;
+        }
+        $newId = DB::table('landing_components')->insertGetId([
+            'landing_id' => $landingId, 'component_id' => $typeIds[$name], 'preview' => null, 'enable' => 1, 'order' => 0,
         ]);
         $spacerId = DB::table('landing_components')->insertGetId([
             'landing_id' => $landingId, 'component_id' => $spacerTypeId, 'preview' => null, 'enable' => 1, 'order' => 0,
@@ -68,7 +74,7 @@ DB::transaction(function () {
         if ($spacerContent) {
             DB::table('landing_component_translations')->insert(['landing_component_id' => $spacerId, 'locale' => 'en', 'content' => $spacerContent]);
         }
-        $groups[] = ['name' => 'upcoming_courses', 'id' => $upcomingId, 'spacers' => [$spacerId]];
+        $groups[] = ['name' => $name, 'id' => $newId, 'spacers' => [$spacerId]];
     }
 
     // New order: the listed sections (switched on), the others as they were, the blog last.
@@ -111,6 +117,40 @@ DB::transaction(function () {
     // Headings in the wording of the original demo, adapted to CVH.
     $idOf = fn(string $name) => DB::table('landing_components')->where('landing_id', $landingId)
         ->where('component_id', $typeIds[$name])->orderBy('order')->value('id');
+
+    updateContent($idOf('features_4x'), function ($c) {
+        $c['main_content'] = [
+            'pre_title' => 'Features',
+            'title' => 'Master New Skills Using Advanced Learning Features',
+            'description' => "Everything you need to learn about Africa's food systems at your own pace, with expert guidance and a certificate when you finish.",
+            'button' => ['label' => 'Explore Courses', 'icon' => 'bul-video-horizontal', 'url' => '/classes'],
+        ];
+        $c['checked_items'] = [
+            'cvhF1' => 'Flexible Learning Schedule',
+            'cvhF2' => 'Free Courses for Everyone',
+            'cvhF3' => 'Expert Instructor Access',
+            'cvhF4' => 'Self-Paced Progression',
+        ];
+        $c['features_cards'] = [
+            'cvhC1' => ['title' => 'Smart Quizzes', 'description' => 'Check what you have learnt with quizzes at the end of each module.', 'icon' => 'bul-task-square', 'url' => ''],
+            'cvhC2' => ['title' => 'Verified Course Certificates', 'description' => 'Earn a certificate anyone can verify online when you complete a course.', 'icon' => 'bul-medal-star', 'url' => '/certificates/verify'],
+            'cvhC3' => ['title' => 'Live Classes', 'description' => 'Join live sessions with food system experts and ask your questions.', 'icon' => 'bul-calendar-tick', 'url' => ''],
+            'cvhC4' => ['title' => 'Community Support', 'description' => 'Learn with peers and get answers in the course Q&A and the community forum.', 'icon' => 'bul-message-question', 'url' => '/community'],
+        ];
+        return $c;
+    });
+
+    // The category bands list every enabled course category when they have no items of their own.
+    updateContent($idOf('links_and_titles_slider_2_rows'), function ($c) {
+        $c['title_items'] = [];
+        $c['card_style'] = $c['card_style'] ?? 'rotate';
+        return $c;
+    });
+
+    updateContent($idOf('best_rated_courses'), function ($c) {
+        $c['main_content'] = array_merge($c['main_content'] ?? [], ['title' => 'Top Rated by Our Students']);
+        return $c;
+    });
 
     updateContent($idOf('trending_categories'), function ($c) {
         $c['main_content'] = array_merge($c['main_content'] ?? [], ['pre_title' => 'Trending', 'title' => 'Trending Categories']);
@@ -157,11 +197,12 @@ DB::transaction(function () {
     echo "Homepage (landing {$landingId}) now:\n";
     $rows = DB::table('landing_components')->where('landing_id', $landingId)->where('component_id', '!=', $spacerTypeId)->orderBy('order')->get();
     foreach ($rows as $row) {
-        printf("  %3d  %-24s %s\n", $row->order, $typeNames[$row->component_id] ?? '?', $row->enable ? 'on' : 'off');
+        printf("  %3d  %-32s %s\n", $row->order, $typeIds->flip()[$row->component_id] ?? '?', $row->enable ? 'on' : 'off');
     }
-    printf("Upcoming courses that will show: %d active. Courses with sales (for Bestsellers): %d.\n",
+    printf("Upcoming courses that will show: %d active. Courses with sales (for Bestsellers): %d. Courses with reviews (for Top Rated): %d.\n",
         DB::table('upcoming_courses')->where('status', 'active')->count(),
-        DB::table('sales')->whereNotNull('webinar_id')->distinct()->count('webinar_id'));
+        DB::table('sales')->whereNotNull('webinar_id')->distinct()->count('webinar_id'),
+        DB::table('webinar_reviews')->where('status', 'active')->distinct()->count('webinar_id'));
 });
 
 echo "Homepage sections arranged like the original.\n";
