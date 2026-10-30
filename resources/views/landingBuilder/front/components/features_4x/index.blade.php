@@ -71,8 +71,10 @@
 
                                         <div class="position-relative z-index-2 d-flex flex-column h-100 bg-white p-24 rounded-24">
                                             @if(!empty($feature['icon']))
-                                                <div class="d-flex-center size-56 rounded-16 bg-primary-20">
-                                                    @svg("iconsax-{$feature['icon']}", ['width' => '28px', 'height' => '28px', 'class' => "icons text-primary"])
+                                                {{-- each card its own colour, like the trending category icons --}}
+                                                @php $iconColor = ['#0170ff', '#5eac49', '#ffa200', '#f63c3c'][$index % 4]; @endphp
+                                                <div class="d-flex-center size-56 rounded-16" style="background-color: {{ $iconColor }}1f; color: {{ $iconColor }}">
+                                                    @svg("iconsax-{$feature['icon']}", ['width' => '28px', 'height' => '28px', 'class' => "icons"])
                                                 </div>
                                             @endif
 
