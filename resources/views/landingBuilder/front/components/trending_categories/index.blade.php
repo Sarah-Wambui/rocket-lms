@@ -31,37 +31,59 @@
                 @endif
             </div>
 
-            {{-- Trending Categories --}}
-            @if(!empty($contents['trending_categories']) and is_array($contents['trending_categories']))
-                <div class="row">
-                    @foreach($contents['trending_categories'] as $trendingCategoryData)
-                        @if(!empty($trendingCategoryData['category']))
-                            @php
-                                $trendingCategory = \App\Models\TrendCategory::query()->where('id', $trendingCategoryData['category'])->first();
-                            @endphp
+        </div>
 
-                            @if(!empty($trendingCategory))
-                                <div class="col-6 col-md-4 col-lg-3 mt-24">
-                                    <a href="{{ $trendingCategory->category->getUrl() }}" target="_blank">
-                                        <div class="trending-categories-section__item-card position-relative">
-                                            <div class="trending-categories-section__item-card-mask"></div>
+        {{-- CVH: categories flow across the page in a loop (was a static grid). The list is rendered twice so the loop is seamless; the copy is hidden from screen readers. --}}
+        @php
+            $trendingCategories = [];
+            foreach (($contents['trending_categories'] ?? []) as $trendingCategoryData) {
+                if (!empty($trendingCategoryData['category'])) {
+                    $trendingCategory = \App\Models\TrendCategory::query()->where('id', $trendingCategoryData['category'])->first();
+                    if (!empty($trendingCategory) and !empty($trendingCategory->category)) {
+                        $trendingCategories[] = $trendingCategory;
+                    }
+                }
+            }
+        @endphp
 
-                                            <div class="position-relative bg-white p-16 rounded-24 z-index-2">
-                                                <div class="d-inline-flex-center size-48 rounded-circle " style="background-color: {{ $trendingCategory->color }}">
-                                                    <img src="{{ $trendingCategory->icon }}" alt="{{ $trendingCategory->category->title }}" class="img-fluid" width="24px" height="24px">
-                                                </div>
+        @if(count($trendingCategories))
+            @push('styles_top')
+                <style>
+                    .cvh-trending-flow { overflow: hidden; padding: 16px 0 24px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+                    .cvh-trending-flow__track { display: flex; gap: 24px; width: max-content; animation: cvh-trending-flow 60s linear infinite; }
+                    .cvh-trending-flow:hover .cvh-trending-flow__track, .cvh-trending-flow:focus-within .cvh-trending-flow__track { animation-play-state: paused; }
+                    .cvh-trending-flow__item { flex: 0 0 auto; width: 240px; }
+                    @keyframes cvh-trending-flow { to { transform: translateX(calc(-50% - 12px)); } }
+                    .rtl .cvh-trending-flow__track { animation-direction: reverse; }
+                    @media (prefers-reduced-motion: reduce) {
+                        .cvh-trending-flow__track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; }
+                        .cvh-trending-flow__track [aria-hidden="true"] { display: none; }
+                    }
+                </style>
+            @endpush
 
-                                                <h4 class="mt-16 font-20 text-dark">{{ $trendingCategory->category->title }}</h4>
-                                                <div class="mt-8 font-16 text-gray-500">{{ trans('update.count_courses', ['count' => $trendingCategory->category->getCoursesCount()]) }}</div>
-                                            </div>
+            <div class="cvh-trending-flow mt-24">
+                <div class="cvh-trending-flow__track">
+                    @foreach([false, true] as $isCopy)
+                        @foreach($trendingCategories as $trendingCategory)
+                            <a href="{{ $trendingCategory->category->getUrl() }}" class="cvh-trending-flow__item" @if($isCopy) aria-hidden="true" tabindex="-1" @endif>
+                                <div class="trending-categories-section__item-card position-relative">
+                                    <div class="trending-categories-section__item-card-mask"></div>
+
+                                    <div class="position-relative bg-white p-16 rounded-24 z-index-2">
+                                        <div class="d-inline-flex-center size-48 rounded-circle " style="background-color: {{ $trendingCategory->color }}">
+                                            <img src="{{ $trendingCategory->icon }}" alt="{{ $isCopy ? '' : $trendingCategory->category->title }}" class="img-fluid" width="24px" height="24px">
                                         </div>
-                                    </a>
+
+                                        <h4 class="mt-16 font-20 text-dark">{{ $trendingCategory->category->title }}</h4>
+                                        <div class="mt-8 font-16 text-gray-500">{{ trans('update.count_courses', ['count' => $trendingCategory->category->getCoursesCount()]) }}</div>
+                                    </div>
                                 </div>
-                            @endif
-                        @endif
+                            </a>
+                        @endforeach
                     @endforeach
                 </div>
-            @endif
-        </div>
+            </div>
+        @endif
     </div>
 @endif

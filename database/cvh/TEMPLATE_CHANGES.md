@@ -89,3 +89,11 @@ Only the top-level page views were placeholders; the controllers, routes, sub-vi
 | `resources/views/admin/rewards/history.blade.php`, `create.blade.php`, `settings.blade.php` | Admin → Reward Points (points per user, conditions, settings) |
 
 Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced by Admin → Course Forum = `/admin/cvh-course-qa`), site forum admin (`admin/forums/*`, the public forum is `/community`), certificate templates (the PDF design is `config/cvh_certificate.php`), and the selling/payments features.
+
+## Homepage like the original demo
+
+| File | Change |
+|---|---|
+| `resources/views/landingBuilder/front/components/trending_categories/index.blade.php` | Trending Categories flow across the page in a loop (pauses on hover, static for reduced motion) instead of a static grid. Marked `CVH:`. |
+
+New: `resources/views/landingBuilder/front/components/upcoming_courses/index.blade.php` (this template version shipped only the admin form and stylesheet of Upcoming Courses). `cvh_partners` now shows the partners as "Official Organizations" cards (first 12, then "Show all"). `database/cvh/24_homepage_like_original.php` switches the sections on, orders them like the demo and sets their headings.

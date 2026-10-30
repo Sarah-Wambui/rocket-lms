@@ -1,4 +1,4 @@
-{{-- CVH custom section: partner logo strip. Content JSON: main_content{pre_title,title,description}, logos{key:{image,name}}, button{label,url} --}}
+{{-- CVH custom section: partner organizations as cards, like the template's "Official Organizations". Content JSON: main_content{pre_title,title,description}, logos{key:{image,name}}, button{label,url} --}}
 @if(!empty($landingComponent) and $landingComponent->enable)
     @php
         $contents = [];
@@ -6,26 +6,22 @@
             $contents = json_decode($landingComponent->content, true);
         }
         $logos = array_values(array_filter($contents['logos'] ?? [], fn($l) => !empty($l['image'])));
+        $visibleCount = 12; // the rest open with "Show all"
     @endphp
 
     @if(count($logos))
         @push('styles_top')
+            <link rel="stylesheet" href="{{ getLandingComponentStylePath("organizations") }}">
+            <link rel="stylesheet" href="{{ getDesign1StylePath("organizations_cards/grid_card_1") }}">
             <style>
-                .cvh-partners { padding: 24px 0; }
-                .cvh-partners__viewport { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
-                .cvh-partners__track { display: flex; gap: 16px; width: max-content; animation: cvh-partners-scroll 90s linear infinite; }
-                .cvh-partners__viewport:hover .cvh-partners__track { animation-play-state: paused; }
-                .cvh-partners__tile { flex: 0 0 auto; width: 164px; height: 96px; display: flex; align-items: center; justify-content: center; padding: 12px; background: #ffffff; border: 1px solid var(--gray-300); border-radius: 16px; }
-                .cvh-partners__tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
-                @keyframes cvh-partners-scroll { to { transform: translateX(-50%); } }
-                @media (prefers-reduced-motion: reduce) {
-                    .cvh-partners__track { animation: none; flex-wrap: wrap; justify-content: center; width: auto; }
-                    .cvh-partners__track [aria-hidden="true"] { display: none; }
-                }
+                .cvh-organizations__logo { width: 72px; height: 72px; flex: 0 0 72px; padding: 8px; border-radius: 16px; background: #ffffff; border: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: center; }
+                .cvh-organizations__logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+                .cvh-organizations__name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+                .cvh-organizations:not(.is-expanded) .cvh-organizations__more { display: none; }
             </style>
         @endpush
 
-        <section class="cvh-partners position-relative">
+        <div class="organizations-section cvh-organizations position-relative" id="cvhOrganizations">
             <div class="container">
                 <div class="d-flex-center flex-column text-center">
                     @if(!empty($contents['main_content']['pre_title']))
@@ -40,26 +36,42 @@
                         <p class="mt-16 font-16 text-gray-500">{!! nl2br(e($contents['main_content']['description'])) !!}</p>
                     @endif
                 </div>
-            </div>
 
-            <div class="cvh-partners__viewport mt-32">
-                <div class="cvh-partners__track">
-                    {{-- The list is rendered twice so the loop scrolls seamlessly; the copy is hidden from screen readers. --}}
-                    @foreach([false, true] as $isCopy)
-                        @foreach($logos as $logo)
-                            <div class="cvh-partners__tile" @if($isCopy) aria-hidden="true" @endif title="{{ $logo['name'] ?? '' }}">
-                                <img src="{{ $logo['image'] }}" alt="{{ $isCopy ? '' : ($logo['name'] ?? '') }}" loading="lazy">
+                <div class="row">
+                    @foreach($logos as $index => $logo)
+                        <div class="col-12 col-md-6 col-lg-4 mt-24 {{ $index >= $visibleCount ? 'cvh-organizations__more' : '' }}">
+                            <div class="organization-card position-relative h-100">
+                                <div class="organization-card__mask"></div>
+
+                                <div class="position-relative z-index-2 bg-white p-16 rounded-24 h-100">
+                                    <div class="d-flex align-items-center p-12">
+                                        <div class="cvh-organizations__logo">
+                                            <img src="{{ $logo['image'] }}" alt="{{ $logo['name'] ?? '' }}" loading="lazy">
+                                        </div>
+                                        <div class="ml-16">
+                                            <h6 class="cvh-organizations__name font-16 text-dark">{{ $logo['name'] ?? '' }}</h6>
+                                            <span class="d-block font-14 text-gray-500 mt-4">Partner organization</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        @endforeach
+                        </div>
                     @endforeach
                 </div>
-            </div>
 
-            @if(!empty($contents['button']['label']) and !empty($contents['button']['url']))
-                <div class="d-flex-center mt-32">
-                    <a href="{{ $contents['button']['url'] }}" class="btn btn-primary btn-lg">{{ $contents['button']['label'] }}</a>
+                <div class="d-flex-center flex-wrap gap-16 mt-40">
+                    @if(count($logos) > $visibleCount)
+                        <button type="button" class="btn btn-outline-primary btn-lg" aria-expanded="false" aria-controls="cvhOrganizations"
+                                onclick="var s=document.getElementById('cvhOrganizations'),open=s.classList.toggle('is-expanded');this.setAttribute('aria-expanded',open);this.textContent=open?'Show fewer':'Show all {{ count($logos) }} organizations';">
+                            Show all {{ count($logos) }} organizations
+                        </button>
+                    @endif
+
+                    @if(!empty($contents['button']['label']) and !empty($contents['button']['url']))
+                        <a href="{{ $contents['button']['url'] }}" class="btn btn-primary btn-lg">{{ $contents['button']['label'] }}</a>
+                    @endif
                 </div>
-            @endif
-        </section>
+            </div>
+        </div>
     @endif
 @endif
