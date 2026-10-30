@@ -1,10 +1,10 @@
 <?php
 /**
  * CVH Africa — homepage sections in the order and style of the original Rocket LMS demo (lms.rocket-soft.org):
- *   Hero, Statistics, Features, Featured Courses, Trending Categories, Bestsellers, Top Rated, the scrolling
- *   bands of all course categories, Upcoming Courses, Free Courses, Expert Instructors, Official Organizations
+ *   Hero, Statistics, Features, Featured Courses, Trending Categories, Bestsellers, Top Rated, one straight
+ *   scrolling band of all course categories, Upcoming Courses, Free Courses, Expert Instructors, Official Organizations
  *   (all partner logos in one panel), then any other sections already on the page, then the Blog.
- * Sections the page does not have yet (Features, category bands, Upcoming) are added.
+ * Sections the page does not have yet (Features, category band, Upcoming) are added; the two-band version is switched off.
  * Each section keeps the spacer that follows it. Sections not in that list keep their on/off state.
  * Run from the project root:  php database/cvh/24_homepage_like_original.php   (re-runnable)
  */
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 const ORDER = [
     'two_columns_hero', 'statistics', 'features_4x', 'featured_courses', 'trending_categories', 'best_selling_courses',
-    'best_rated_courses', 'links_and_titles_slider_2_rows', 'upcoming_courses', 'free_courses', 'instructors', 'cvh_partners',
+    'best_rated_courses', 'links_and_titles_slider_1_row', 'upcoming_courses', 'free_courses', 'instructors', 'cvh_partners',
 ];
 const LAST = 'blog';
 
@@ -38,7 +38,7 @@ DB::transaction(function () {
     }
 
     $typeIds = DB::table('landing_builder_components')->pluck('id', 'name');
-    foreach (['features_4x' => 'information', 'links_and_titles_slider_2_rows' => 'miscellaneous', 'upcoming_courses' => 'courses'] as $name => $category) {
+    foreach (['features_4x' => 'information', 'links_and_titles_slider_1_row' => 'miscellaneous', 'upcoming_courses' => 'courses'] as $name => $category) {
         if (!isset($typeIds[$name])) {
             $typeIds[$name] = DB::table('landing_builder_components')->insertGetId(['name' => $name, 'category' => $category]);
         }
@@ -54,6 +54,13 @@ DB::transaction(function () {
             $groups[count($groups) - 1]['spacers'][] = $row->id;
         } else {
             $groups[] = ['name' => $typeNames[$row->component_id] ?? '?', 'id' => $row->id, 'spacers' => []];
+        }
+    }
+
+    // The two crossing bands (an earlier version of this script) are replaced by the single band: switch them off.
+    foreach ($groups as $group) {
+        if ($group['name'] === 'links_and_titles_slider_2_rows') {
+            DB::table('landing_components')->whereIn('id', array_merge([$group['id']], $group['spacers']))->update(['enable' => 0]);
         }
     }
 
@@ -140,10 +147,12 @@ DB::transaction(function () {
         return $c;
     });
 
-    // The category bands list every enabled course category when they have no items of their own.
-    updateContent($idOf('links_and_titles_slider_2_rows'), function ($c) {
+    // One straight navy band; it lists every enabled course category when it has no items of its own.
+    updateContent($idOf('links_and_titles_slider_1_row'), function ($c) {
         $c['title_items'] = [];
-        $c['card_style'] = $c['card_style'] ?? 'rotate';
+        $c['card_style'] = 'normal';
+        $c['card_color'] = 'secondary';
+        $c['separator_icon'] = 'bul-diamonds';
         return $c;
     });
 
