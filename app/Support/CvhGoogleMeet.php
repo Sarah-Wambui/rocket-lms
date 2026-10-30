@@ -19,7 +19,8 @@ use Illuminate\Support\Str;
  */
 class CvhGoogleMeet
 {
-    public const SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+    // calendar.events: create the Meet events; meetings.space.readonly: read who attended (CvhMeetMetrics)
+    public const SCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/meetings.space.readonly';
     private const TOKEN_URL = 'https://oauth2.googleapis.com/token';
     private const CALENDAR_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary';
 
@@ -145,7 +146,7 @@ class CvhGoogleMeet
         self::saveSettings(['refresh_token' => '', 'account_email' => '', 'connected_at' => null, 'connected_client_id' => '']);
     }
 
-    private static function accessToken(): string
+    public static function accessToken(): string
     {
         return Cache::remember('cvh_google_meet_token', 3000, function () {
             $settings = self::settings();

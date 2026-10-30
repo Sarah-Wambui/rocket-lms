@@ -97,3 +97,13 @@ Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced b
 | `resources/views/landingBuilder/front/components/trending_categories/index.blade.php` | Trending Categories flow across the page in a loop (pauses on hover, static for reduced motion) instead of a static grid. Marked `CVH:`. |
 
 New: `resources/views/landingBuilder/front/components/upcoming_courses/index.blade.php` (this template version shipped only the admin form and stylesheet of Upcoming Courses). `cvh_partners` now shows all partner logos together in one "Official Organizations" panel. `database/cvh/24_homepage_like_original.php` switches the sections on, orders them like the demo and sets their headings.
+
+## Live class metrics (Google Meet)
+
+| File | Change |
+|---|---|
+| `app/Support/CvhGoogleMeet.php` | Also asks Google for `meetings.space.readonly` (read attendance); `accessToken()` public. Reconnect the account once after deploying. |
+| `app/Console/Commands/CvhRunReminders.php` | Runs `cvh:meet-metrics` every hour after the reminders. |
+| `resources/views/admin/includes/sidebar/education.blade.php` | **Live Class Metrics** menu item. Marked `{{-- CVH: ... --}}`. |
+
+New: `app/Support/CvhMeetMetrics.php`, `app/Console/Commands/CvhMeetMetrics.php` (`php artisan cvh:meet-metrics [--session=ID]`), `app/Http/Controllers/Admin/CvhMeetMetricsAdminController.php`, views `admin/cvh_meet_metrics`, tables from `database/cvh/26_meet_metrics.php`.

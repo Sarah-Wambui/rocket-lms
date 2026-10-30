@@ -209,6 +209,16 @@
     </li>
 @endcan
 
+@can('admin_webinars_list')
+    {{-- CVH: Google Meet engagement metrics (in-house page) --}}
+    <li class="{{ (request()->is(getAdminPanelUrl('/cvh-meet-metrics*', false))) ? 'active' : '' }}">
+        <a class="nav-link " href="{{ getAdminPanelUrl('/cvh-meet-metrics') }}">
+            <x-iconsax-bul-chart-2 class="icons" width="24px" height="24px"/>
+            <span>Live Class Metrics</span>
+        </a>
+    </li>
+@endcan
+
 @can('admin_course_question_forum_list')
     {{-- CVH: points to the in-house course Q&A overview (the original page is a paid-plugin placeholder) --}}
     <li class="{{ (request()->is(getAdminPanelUrl('/cvh-course-qa*', false))) ? 'active' : '' }}">

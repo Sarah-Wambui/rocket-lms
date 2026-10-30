@@ -58,6 +58,14 @@ class CvhRunReminders extends Command
             }
         }
 
+        // Google Meet attendance for the live class metrics (Google keeps it only 30 days, so fetch it every hour)
+        try {
+            $this->call('cvh:meet-metrics');
+        } catch (\Throwable $exception) {
+            Log::warning('cvh:reminders meet metrics failed: ' . $exception->getMessage());
+            $this->warn("meet metrics: failed ({$exception->getMessage()})");
+        }
+
         return self::SUCCESS;
     }
 }

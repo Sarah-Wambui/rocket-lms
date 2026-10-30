@@ -55,6 +55,13 @@ Route::group(['prefix' => 'cvh-google-meet'], function () {
     Route::post('/disconnect', 'CvhGoogleMeetController@disconnect');
 });
 
+// CVH Africa: Google Meet engagement metrics (Education > Live Class Metrics)
+Route::group(['prefix' => 'cvh-meet-metrics'], function () {
+    Route::get('/', 'CvhMeetMetricsAdminController@index');
+    Route::get('/{id}', 'CvhMeetMetricsAdminController@show')->where('id', '[0-9]+');
+    Route::post('/{id}/sync', 'CvhMeetMetricsAdminController@sync')->where('id', '[0-9]+');
+});
+
 // CVH Africa: in-house Homepage Editor (Appearance > Homepage Editor)
 Route::group(['prefix' => 'cvh-homepage'], function () {
     Route::get('/', 'CvhHomepageController@index');
