@@ -157,9 +157,36 @@ class CvhCertificatesController extends Controller
         ]);
     }
 
-    private function pdf($certificate)
+    /** The certificate settings for the course's programme (config cvh_certificate.programs), HD4A by default. */
+    private function configFor($webinarId): array
     {
         $config = config('cvh_certificate');
+        $course = Webinar::query()->find($webinarId);
+
+        foreach ($course ? ($config['programs'] ?? []) : [] as $program) {
+            $match = $program['match'] ?? [];
+            $inBundle = !empty($match['bundles']) && DB::table('bundle_webinars')
+                    ->join('bundles', 'bundles.id', '=', 'bundle_webinars.bundle_id')
+                    ->where('bundle_webinars.webinar_id', $course->id)
+                    ->whereIn('bundles.slug', $match['bundles'])
+                    ->exists();
+            $inCategory = !empty($match['categories']) && DB::table('categories')
+                    ->where('id', $course->category_id)
+                    ->whereIn('slug', $match['categories'])
+                    ->exists();
+            $slugMatches = Str::contains(Str::lower($course->slug), array_map([Str::class, 'lower'], $match['slug_contains'] ?? []));
+
+            if ($inBundle or $inCategory or $slugMatches) {
+                return array_replace($config, $program['settings'] ?? []);
+            }
+        }
+
+        return $config;
+    }
+
+    private function pdf($certificate)
+    {
+        $config = $this->configFor($certificate->webinar_id);
         $verifyUrl = rtrim(config('app.url'), '/') . '/certificates/verify?code=' . urlencode($certificate->code);
         $qrSvg = (string)QrCode::format('svg')->size(220)->margin(0)->generate($verifyUrl);
 

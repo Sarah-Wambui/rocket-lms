@@ -37,4 +37,27 @@ return [
         // QR code + certificate ID, so anyone can verify it (position as a percentage of the page)
         'verify_box' => ['right' => 4, 'bottom' => 4, 'size_mm' => 22],
     ],
+
+    /*
+    | Programmes with their own certificate. Everything above is the HD4A certificate (the default); a course that
+    | matches a programme below gets that programme's settings instead (each key given replaces the one above).
+    | A course matches when it is in one of the bundles, in one of the categories, or its slug contains one of the words.
+    */
+    'programs' => [
+        'innoecofood' => [
+            'match' => [
+                'bundles' => ['INNOECOFOOD'],
+                'categories' => ['Aquaculture'],
+                'slug_contains' => ['innoecofood'],
+            ],
+            'settings' => [
+                'footer_logos' => [
+                    '/store/cvh/files/Innoecofood Logo Original.png',
+                ],
+                // The old-site background carries the HD4A branding, so INNOECOFOOD uses the built-in design until it
+                // has a background of its own: e.g. ['background' => '/store/cvh/certificate/innoecofood.jpg'] + the keys above.
+                'template' => null,
+            ],
+        ],
+    ],
 ];

@@ -12,6 +12,12 @@
 
     .cvh-innov-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 24px; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
     .cvh-innov-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(18, 31, 62, .10); }
+    .cvh-innov-card__innovation { padding: 10px 12px; border-radius: 12px; background: var(--gray-100); }
+    .cvh-innov-card__story summary { cursor: pointer; list-style: none; }
+    .cvh-innov-card__story summary::-webkit-details-marker { display: none; }
+    .cvh-innov-card__story summary::after { content: ' +'; }
+    .cvh-innov-card__story[open] summary::after { content: ' −'; }
+    .cvh-innov-card__story .cvh-innov-profile__content h3 { font-size: 15px; margin: 16px 0 6px; }
     .cvh-innov-card__image { position: relative; aspect-ratio: 1 / 1; background: var(--gray-100); }
     .cvh-innov-card__image img { width: 100%; height: 100%; object-fit: cover; }
     .cvh-innov-badge { position: absolute; top: 12px; left: 12px; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 12px; color: #fff; background: var(--secondary); }
