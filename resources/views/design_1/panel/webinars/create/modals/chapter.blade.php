@@ -30,7 +30,7 @@
 
     <div class="form-group d-flex align-items-center">
         <div class="custom-switch mr-8">
-            <input id="statusSwitch" type="checkbox" name="ajax[chapter][status]" class="custom-control-input" {{ (!empty($chapter) and $chapter->status == \App\Models\WebinarChapter::$chapterActive) ? 'checked' :  '' }}>
+            <input id="statusSwitch" type="checkbox" name="ajax[chapter][status]" class="custom-control-input" {{-- CVH: a new section starts active, as in the admin panel --}} {{ (empty($chapter) or $chapter->status == \App\Models\WebinarChapter::$chapterActive) ? 'checked' :  '' }}>
             <label class="custom-control-label cursor-pointer" for="statusSwitch"></label>
         </div>
 
