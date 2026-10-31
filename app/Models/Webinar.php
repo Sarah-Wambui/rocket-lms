@@ -798,28 +798,47 @@ class Webinar extends Model implements TranslatableContract
         return \Illuminate\Support\Facades\Cache::remember("cvh_average_learning_{$this->id}", 600, fn() => $this->calculateAverageLearning());
     }
 
+    // CVH: the same average as the template's per-student getProgress() loop (one query per lesson per student, which ran
+    // /panel/courses out of memory), counted in a few queries. Every student has the same active items, so the average of
+    // passed/total over the students is all items passed by them / (total items * students).
     private function calculateAverageLearning()
     {
-        $percent = 0;
+        $studentsIds = array_values(array_unique(array_filter($this->getStudentsIds())));
 
-        $studentsIds = $this->getStudentsIds();
+        $files = $this->files()->where('status', 'active')->pluck('id');
+        $sessions = $this->sessions()->where('status', 'active')->pluck('id');
+        $textLessons = $this->textLessons()->where('status', 'active')->pluck('id');
+        $quizzes = $this->quizzes()->where('status', 'active')->pluck('id');
+        $assignments = $this->assignments()->where('status', 'active')->pluck('id');
 
-        if (count($studentsIds)) {
-            $studentsLearning = [];
+        $total = $files->count() + $sessions->count() + $textLessons->count() + $quizzes->count() + $assignments->count();
 
-            foreach ($studentsIds as $studentId) {
-                $student = User::query()->where('id', $studentId)->first();
+        if (!count($studentsIds) or !$total) {
+            return 0;
+        }
 
-                if (!empty($student)) {
-                    $studentsLearning[$student->id] = $this->getProgress(true, $student);
+        $passed = 0;
+
+        foreach (array_chunk($studentsIds, 5000) as $ids) {
+            foreach (['file_id' => $files, 'session_id' => $sessions, 'text_lesson_id' => $textLessons] as $column => $itemIds) {
+                if ($itemIds->isNotEmpty()) {
+                    $passed += \DB::table('course_learning')->whereIn('user_id', $ids)->whereIn($column, $itemIds)
+                        ->distinct()->count(\DB::raw("concat(user_id, '-', {$column})"));
                 }
             }
 
-            $sumStudentsLearning = array_sum($studentsLearning);
-            $percent = ($sumStudentsLearning > 0 and count($studentsLearning) > 0) ? (array_sum($studentsLearning) / count($studentsLearning)) : 0;
+            if ($quizzes->isNotEmpty()) {
+                $passed += \DB::table('quizzes_results')->whereIn('user_id', $ids)->whereIn('quiz_id', $quizzes)->where('status', QuizzesResult::$passed)
+                    ->distinct()->count(\DB::raw("concat(user_id, '-', quiz_id)"));
+            }
+
+            if ($assignments->isNotEmpty()) {
+                $passed += \DB::table('webinar_assignment_history')->whereIn('student_id', $ids)->whereIn('assignment_id', $assignments)->where('status', WebinarAssignmentHistory::$passed)
+                    ->distinct()->count(\DB::raw("concat(student_id, '-', assignment_id)"));
+            }
         }
 
-        return round($percent, 2);
+        return round(min(100, $passed * 100 / ($total * count($studentsIds))), 2);
     }
 
     public function checkShowProgress($isLearningPage = false)

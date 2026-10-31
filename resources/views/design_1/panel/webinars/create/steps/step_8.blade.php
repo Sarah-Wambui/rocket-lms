@@ -11,24 +11,7 @@
         <textarea name="message_for_reviewer" rows="10" class="form-control">{{ (!empty($webinar) and $webinar->message_for_reviewer) ? $webinar->message_for_reviewer : old('message_for_reviewer') }}</textarea>
     </div>
 
-    <div class="form-group">
-        <div class="d-flex align-items-center">
-            <div class="custom-switch mr-8">
-                <input id="rulesSwitch" type="checkbox" name="rules" class="custom-control-input">
-                <label class="custom-control-label cursor-pointer" for="rulesSwitch"></label>
-            </div>
-
-            <div class="">
-                <label class="cursor-pointer" for="rulesSwitch">{{ trans('public.agree_rules') }}</label>
-            </div>
-        </div>
-
-        @error('rules')
-        <div class="text-danger mt-8">
-            {{ $message }}
-        </div>
-        @enderror
-    </div>
+    {{-- CVH: the "I agree with the rules" switch is removed; sending for review no longer needs it (Panel\WebinarController::update) --}}
 
     @php
         $contentReviewInformationSetting = getContentReviewInformationSettings();

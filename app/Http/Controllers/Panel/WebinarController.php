@@ -391,9 +391,7 @@ class WebinarController extends Controller
         $webinarRulesRequired = false;
         $directPublicationOfCourses = !empty(getGeneralOptionsSettings('direct_publication_of_courses'));
 
-        if (!$directPublicationOfCourses and (($currentStep == 8 and !$getNextStep and !$isDraft) or (!$getNextStep and !$isDraft))) {
-            $webinarRulesRequired = empty($data['rules']);
-        }
+        // CVH: no "I agree with the rules" tick needed to send a course for review (CVH has no rules text; the admin review is the check)
 
         $this->validate($request, $rules);
 
