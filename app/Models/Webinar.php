@@ -946,7 +946,7 @@ class Webinar extends Model implements TranslatableContract
     {
         $result = false;
 
-        if (!is_null($this->capacity)) {
+        if (!empty($this->capacity)) { // CVH: 0 means unlimited
             $salesCount = !empty($this->sales_count) ? $this->sales_count : $this->sales()->count();
 
             $result = $salesCount >= $this->capacity;
@@ -959,17 +959,26 @@ class Webinar extends Model implements TranslatableContract
     {
         $result = true;
 
-        if (!is_null($this->capacity)) {
+        if (!empty($this->capacity)) { // CVH: a capacity of 0 means unlimited, not "full"
             $salesCount = !empty($this->sales_count) ? $this->sales_count : $this->sales()->count();
 
             $result = $salesCount < $this->capacity;
         }
 
         if ($result and $this->type == 'webinar') {
-            $result = ($this->start_date > time());
+            $result = $this->liveClassOpenForEnrolment();
         }
 
         return $result;
+    }
+
+    /** CVH: a live class takes students until its last active live session has ended, not only before its start date. */
+    public function liveClassOpenForEnrolment(): bool
+    {
+        return $this->start_date > time() or $this->sessions()
+                ->where('status', Session::$Active)
+                ->whereRaw('(date + duration * 60) > ?', [time()])
+                ->exists();
     }
 
     public function canJoinToWaitlist()
@@ -987,13 +996,13 @@ class Webinar extends Model implements TranslatableContract
             $status = 'js-course-has-bought-status';
         } else {
 
-            if (!is_null($this->capacity)) {
+            if (!empty($this->capacity)) {
                 $salesCount = !empty($this->sales_count) ? $this->sales_count : $this->sales()->count();
 
                 if ($salesCount >= $this->capacity) {
                     $status = 'js-course-not-capacity-status';
                 }
-            } elseif ($this->type == 'webinar' and $this->start_date <= time()) {
+            } elseif ($this->type == 'webinar' and !$this->liveClassOpenForEnrolment()) {
                 $status = 'js-course-has-started-status';
             }
         }
