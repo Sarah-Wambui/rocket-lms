@@ -19,10 +19,12 @@ use Illuminate\Support\Str;
  */
 class CvhGoogleMeet
 {
-    // calendar.events: create the Meet events; meetings.space.readonly: read who attended (CvhMeetMetrics)
-    public const SCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/meetings.space.readonly';
+    // calendar.events: create the Meet events; meetings.space.readonly: read who attended (CvhMeetMetrics);
+    // meetings.space.settings: turn on automatic recording (autoRecord)
+    public const SCOPE = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/meetings.space.readonly https://www.googleapis.com/auth/meetings.space.settings';
     private const TOKEN_URL = 'https://oauth2.googleapis.com/token';
     private const CALENDAR_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary';
+    private const MEET_URL = 'https://meet.googleapis.com/v2/';
 
     /**
      * The OAuth client (Client ID / secret) is entered in Settings → General → Features with the Zoom keys; the
@@ -225,6 +227,7 @@ class CvhGoogleMeet
                     DB::table('sessions')->where('id', $session->id)->update(['link' => $response->json('hangoutLink')]);
                     $session->link = $response->json('hangoutLink');
                 }
+                self::autoRecord($session);
                 return;
             }
             // the event was deleted in Google Calendar: make a new one
@@ -253,6 +256,37 @@ class CvhGoogleMeet
         DB::table('sessions')->where('id', $session->id)->update(['google_event_id' => $eventId, 'link' => $link, 'updated_at' => time()]);
         $session->google_event_id = $eventId;
         $session->link = $link;
+        self::autoRecord($session);
+    }
+
+    /**
+     * Turn on Meet's automatic recording for the session's meeting, so every class is recorded to the connected
+     * account's Drive: instructors who join with a personal Gmail are outside guests and can't press Record. Needs the
+     * meetings.space.settings scope (reconnect Google after it was added) and recording allowed for the connected
+     * account in the Google Admin console. Returns null when it worked, else Google's reason; failures are only logged.
+     */
+    public static function autoRecord(Session $session): ?string
+    {
+        $code = CvhMeetMetrics::meetingCode($session->link);
+        if (!$code) {
+            return 'the session has no Meet link';
+        }
+        try {
+            $space = Http::withToken(self::accessToken())->timeout(30)->get(self::MEET_URL . 'spaces/' . $code);
+            if (!$space->successful()) {
+                throw new \RuntimeException($space->json('error.message') ?? ('HTTP ' . $space->status()));
+            }
+            $response = Http::withToken(self::accessToken())->timeout(30)
+                ->patch(self::MEET_URL . $space->json('name') . '?updateMask=config.artifactConfig.recordingConfig.autoRecordingGeneration',
+                    ['config' => ['artifactConfig' => ['recordingConfig' => ['autoRecordingGeneration' => 'ON']]]]);
+            if (!$response->successful()) {
+                throw new \RuntimeException($response->json('error.message') ?? ('HTTP ' . $response->status()));
+            }
+            return null;
+        } catch (\Throwable $exception) {
+            Log::warning("Google Meet: could not turn on automatic recording for session {$session->id}: " . $exception->getMessage());
+            return $exception->getMessage();
+        }
     }
 
     /**
