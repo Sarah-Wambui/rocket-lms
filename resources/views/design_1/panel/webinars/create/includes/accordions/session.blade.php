@@ -223,7 +223,8 @@
                     @if(!$session->isFinished())
                         <a href="{{ $session->getJoinLink(true) }}" target="_blank" class="ml-12 btn btn-lg btn-accent">{{ trans('footer.join') }}</a>
                     @else
-                        <button type="button" class="js-session-has-ended ml-12 btn btn-lg btn-accent disabled">{{ trans('footer.join') }}</button>
+                        {{-- CVH: say why it can't be joined (the panel has no click message for this, unlike the admin) --}}
+                        <button type="button" class="js-session-has-ended ml-12 btn btn-lg btn-accent disabled" title="{{ trans('update.session_ended_hint_for_users') }}">{{ trans('update.session_ended') }}</button>
                     @endif
                 @endif
 
