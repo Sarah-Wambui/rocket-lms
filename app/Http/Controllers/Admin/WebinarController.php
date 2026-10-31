@@ -415,7 +415,7 @@ class WebinarController extends Controller
             'points' => $data['points'] ?? null,
             'category_id' => $data['category_id'],
             'message_for_reviewer' => $data['message_for_reviewer'] ?? null,
-            'status' => Webinar::$pending,
+            'status' => Webinar::$isDraft, // CVH: an admin's own new course is a draft until they press "Save and publish", not waiting for review
             'created_at' => time(),
             'updated_at' => time(),
         ]);
