@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 const RECORDING = '8';
-const SOURCES = ['tc:recording', 'tc:recording_item', 'tc:preview:files', 'tc:preview:text_lessons'];
+const SOURCES = ['tc:recording', 'tc:recording_item', 'tc:preview:files', 'tc:preview:text_lessons', 'tc:description'];
 
 /* ---------- undo ---------- */
 if (in_array('--undo', $argv, true)) {
@@ -36,6 +36,9 @@ if (in_array('--undo', $argv, true)) {
         foreach (DB::table('cvh_import_map')->where('source', "tc:preview:{$table}")->get() as $row) {
             DB::table($table)->where('id', $row->new_id)->update(['accessibility' => $row->prev]);
         }
+    }
+    foreach (DB::table('cvh_import_map')->where('source', 'tc:description')->get() as $row) {
+        DB::table('file_translations')->where('file_id', $row->new_id)->where('locale', 'en')->update(['description' => $row->prev]);
     }
     DB::table('cvh_import_map')->whereIn('source', SOURCES)->delete();
     Cache::flush();
@@ -59,11 +62,19 @@ $remember = function (string $source, $oldId, int $newId, ?string $prev = null) 
     if ($apply) DB::table('cvh_import_map')->insert(['source' => $source, 'old_id' => $oldId, 'new_id' => $newId, 'created' => 1, 'prev' => $prev]);
 };
 $now = time();
-$counts = ['added' => 0, 'there' => 0, 'missing' => 0, 'no_course' => 0, 'previews' => 0];
+$counts = ['added' => 0, 'there' => 0, 'missing' => 0, 'no_course' => 0, 'previews' => 0, 'descriptions' => 0];
+
+// TrainerCentral's lesson description (editor HTML) as plain text with its paragraphs
+$plain = function (?string $html): string {
+    $text = preg_replace(['#<br\s*/?>#i', '#</(p|div|li|h\d)>#i'], "\n", (string)$html);
+    $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    return trim(preg_replace(["/[ \t\x{00A0}]+/u", "/\s*\n\s*/"], [' ', "\n\n"], $text));
+};
 
 foreach ($courses as $c) {
     $courseName = trim($c['course']['courseName'] ?? '');
     $free = collect($c['sessions']['sessionSettings'] ?? [])->where('allowFreePreview', 'true')->pluck('sessionId')->all();
+    $about = collect($c['sessions']['sessions'] ?? [])->keyBy('id')->map(fn($s) => $plain($s['description'] ?? ''));
     $lessons = collect($c['sessionInfos']['sessions'] ?? [])->groupBy('section');
 
     foreach ($c['sections']['sections'] ?? [] as $section) {
@@ -94,6 +105,18 @@ foreach ($courses as $c) {
                     if ($apply) DB::table($it['table'])->where('id', $it['id'])->update(['accessibility' => 'free']);
                     $remember("tc:preview:{$it['table']}", $it['id'], $it['id'], $prev);
                     $counts['previews']++;
+                }
+            }
+
+            // the lesson's description on its files (the import gave them only the lesson's name)
+            $description = $about[$lesson['id']] ?? '';
+            if ($chapter && $description !== '') {
+                foreach ($lessonItems($lesson)->where('table', 'files') as $it) {
+                    $prev = DB::table('file_translations')->where('file_id', $it['id'])->where('locale', 'en')->value('description');
+                    if ($prev !== $lesson['name'] || $map('tc:description', $it['id'])) continue;
+                    if ($apply) DB::table('file_translations')->where('file_id', $it['id'])->where('locale', 'en')->update(['description' => $description]);
+                    $remember('tc:description', $it['id'], $it['id'], $prev);
+                    $counts['descriptions']++;
                 }
             }
 
@@ -141,7 +164,7 @@ foreach ($courses as $c) {
                 $fileId = DB::table('files')->insertGetId(['creator_id' => $chapter->user_id, 'webinar_id' => $webinar->id, 'chapter_id' => $chapter->id,
                     'accessibility' => $isFree ? 'free' : 'paid', 'downloadable' => 0, 'storage' => $storage, 'file' => $file, 'volume' => $volume,
                     'file_type' => $type, 'check_previous_parts' => 0, 'online_viewer' => 0, 'order' => $position, 'status' => 'active', 'created_at' => $now]);
-                DB::table('file_translations')->insert(['file_id' => $fileId, 'locale' => 'en', 'title' => Str::limit($lesson['name'] . ' (recording)', 250, ''), 'description' => $lesson['name']]);
+                DB::table('file_translations')->insert(['file_id' => $fileId, 'locale' => 'en', 'title' => Str::limit($lesson['name'] . ' (recording)', 250, ''), 'description' => $description ?: $lesson['name']]);
                 $itemId = DB::table('webinar_chapter_items')->insertGetId(['user_id' => $chapter->user_id, 'chapter_id' => $chapter->id, 'item_id' => $fileId,
                     'type' => 'file', 'order' => $position, 'created_at' => $now]);
                 $remember('tc:recording', $lesson['id'], $fileId);
@@ -153,5 +176,6 @@ foreach ($courses as $c) {
 
 if ($apply) Cache::flush();
 echo "\n{$counts['added']} recordings " . ($apply ? 'added' : 'to add') . ", {$counts['there']} already there, {$counts['missing']} not downloaded yet, "
-    . "{$counts['no_course']} in courses not on the site yet; {$counts['previews']} lesson items " . ($apply ? 'made' : 'to make') . " free previews.\n";
-if (!$apply && ($counts['added'] || $counts['previews'])) echo "Run again with --apply to do it.\n";
+    . "{$counts['no_course']} in courses not on the site yet; {$counts['previews']} lesson items " . ($apply ? 'made' : 'to make') . " free previews; "
+    . "{$counts['descriptions']} lesson files " . ($apply ? 'given' : 'to give') . " their lesson's description.\n";
+if (!$apply && ($counts['added'] || $counts['previews'] || $counts['descriptions'])) echo "Run again with --apply to do it.\n";
