@@ -207,8 +207,16 @@ class CvhGoogleMeet
         }
 
         if (!empty($session->google_event_id)) {
+            // keep the students already added as guests (addGuest), or they would have to "ask to join" again
+            $body = self::eventBody($session);
+            $current = Http::withToken(self::accessToken())->timeout(30)
+                ->get(self::CALENDAR_URL . '/events/' . rawurlencode($session->google_event_id))->json('attendees') ?: [];
+            $body['attendees'] = collect($body['attendees'])
+                ->concat(collect($current)->filter(fn($guest) => !empty($guest['email']) && empty($guest['self']))->map(fn($guest) => ['email' => strtolower($guest['email'])]))
+                ->unique('email')->values()->all();
+
             $response = Http::withToken(self::accessToken())->timeout(30)
-                ->patch(self::CALENDAR_URL . '/events/' . rawurlencode($session->google_event_id) . '?sendUpdates=none', self::eventBody($session));
+                ->patch(self::CALENDAR_URL . '/events/' . rawurlencode($session->google_event_id) . '?sendUpdates=none', $body);
 
             if ($response->status() !== 404 && $response->status() !== 410) {
                 self::check($response, 'update');
@@ -245,6 +253,31 @@ class CvhGoogleMeet
         DB::table('sessions')->where('id', $session->id)->update(['google_event_id' => $eventId, 'link' => $link, 'updated_at' => time()]);
         $session->google_event_id = $eventId;
         $session->link = $link;
+    }
+
+    /**
+     * Put a student on the session's guest list when they join, so Google lets them straight into the Meet instead of
+     * making them "ask to join" the host. They must be signed in to Google with this same email. Failures are only logged.
+     */
+    public static function addGuest(Session $session, ?string $email): void
+    {
+        $email = strtolower(trim((string)$email));
+        if (empty($session->google_event_id) || !filter_var($email, FILTER_VALIDATE_EMAIL) || !self::connected()
+            || $email === strtolower((string)self::settings()['account_email'])) {
+            return;
+        }
+        try {
+            $url = self::CALENDAR_URL . '/events/' . rawurlencode($session->google_event_id);
+            $guests = collect(Http::withToken(self::accessToken())->timeout(30)->get($url)->json('attendees') ?: []);
+            if ($guests->contains(fn($guest) => strtolower($guest['email'] ?? '') === $email)) {
+                return;
+            }
+            $guests = $guests->filter(fn($guest) => !empty($guest['email']) && empty($guest['self']))
+                ->map(fn($guest) => ['email' => $guest['email']])->push(['email' => $email])->values()->all();
+            self::check(Http::withToken(self::accessToken())->timeout(30)->patch($url . '?sendUpdates=none', ['attendees' => $guests]), 'add guest');
+        } catch (\Throwable $exception) {
+            Log::warning('Google Meet: could not add ' . $email . ' to session ' . $session->id . ': ' . $exception->getMessage());
+        }
     }
 
     /** Remove the session's Calendar event (and with it the Meet); failures are only logged. */

@@ -362,6 +362,11 @@ class SessionController extends Controller
                 // Store User (audience) Attendance Status
                 if (!$checkUserCanAccessToSession['isModerator']) {
                     $this->handleStoreAttendanceStatus($session, $user);
+
+                    // CVH: invite the student to the Meet, so Google lets them in instead of making them "ask to join"
+                    if ($session->session_api == 'google_meet') {
+                        \App\Support\CvhGoogleMeet::addGuest($session, $user->email);
+                    }
                 } else {
                     // Update Session Start Date
                     $session->update([
