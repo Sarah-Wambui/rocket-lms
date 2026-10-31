@@ -61,7 +61,7 @@ class MyCoursesController extends Controller
 
         $upcomingLiveSessions = null;
         if (!$isInvitedCoursesPage) {
-            $upcomingLiveSessions = $this->getMyCoursesListUpcomingLiveSessions();
+            $upcomingLiveSessions = $this->getMyCoursesListUpcomingLiveSessions($user);
         }
 
         $pageTitle = $isInvitedCoursesPage ? trans('panel.invited_classes') : trans('update.my_courses');
@@ -192,9 +192,16 @@ class MyCoursesController extends Controller
         ]);
     }
 
-    private function getMyCoursesListUpcomingLiveSessions()
+    private function getMyCoursesListUpcomingLiveSessions($user)
     {
+        // CVH: only this instructor's own courses' sessions (the template listed every upcoming session on the site)
         return Session::whereNotNull('webinar_id')
+            ->whereHas('webinar', function ($query) use ($user) {
+                $query->where('creator_id', $user->id)
+                    ->orWhere('teacher_id', $user->id);
+            })
+            ->with('webinar')
+            ->limit(10)
             ->where('date', '>=', time())
             ->orderBy('date', 'asc')
             ->where('status', Session::$Active)

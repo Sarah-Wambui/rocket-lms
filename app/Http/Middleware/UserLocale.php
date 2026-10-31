@@ -17,6 +17,12 @@ class UserLocale
      */
     public function handle($request, Closure $next)
     {
+        // CVH: content forms send the site's default language as "EN"; translations are read back as "en", so one saved
+        // as "EN" was never found and getTranslateAttributeValue() looped until memory ran out (500 on /panel/courses).
+        if (is_string($request->input('locale'))) {
+            $request->merge(['locale' => mb_strtolower($request->input('locale'))]);
+        }
+
         $generalSettings = getGeneralSettings();
 
         $defaultLocale = getDefaultLocale();

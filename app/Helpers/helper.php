@@ -2140,6 +2140,15 @@ function getTranslateAttributeValue($model, $key, $loca = null)
 
         return $model->translate(mb_strtolower($locale))->{$key};
     } catch (\Exception $e) {
+        // CVH: a translation saved with the locale in capitals ("EN") is the same language; without this the fallbacks
+        // below bounce between "en" and "EN" forever (memory exhausted)
+        if (!empty($model->translations)) {
+            $sameLocale = $model->translations->first(fn($translation) => mb_strtolower((string)$translation->locale) === mb_strtolower((string)$locale));
+            if (!empty($sameLocale)) {
+                return $sameLocale->{$key};
+            }
+        }
+
         // this conditions get client side
 
         if (empty($contentLocale) and empty($loca)) { //  first get translate by site default language

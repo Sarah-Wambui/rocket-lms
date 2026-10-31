@@ -107,7 +107,7 @@ class Session extends Model implements TranslatableContract
             $link = Link::create($this->title, $date, $date); //->description('Cookies & cocktails!')
 
             return $link->google();
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) { // CVH: also a missing title/date (TypeError), which used to break the whole page
             return '';
         }
     }
