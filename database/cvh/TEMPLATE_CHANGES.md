@@ -92,7 +92,7 @@ Not rebuilt on purpose: course forum admin (`admin/webinars/forum/*`, replaced b
 
 ## Homepage like the original demo
 
-No template file changed. New front views for components this template version shipped only with an admin form and stylesheet (each starts with a `{{-- CVH: ... --}}` comment): `resources/views/landingBuilder/front/components/features_4x`, `links_and_titles_slider_1_row` (one straight scrolling band of links; with no items set it lists every enabled course category) and `upcoming_courses`. `cvh_forums` (new) shows the community forum with its latest discussions. `cvh_partners` shows all partner logos together in one "Official Organizations" panel. `database/cvh/24_homepage_like_original.php` adds the missing sections, orders them like the demo and sets their headings.
+No template file changed. New front views for components this template version shipped only with an admin form and stylesheet (each starts with a `{{-- CVH: ... --}}` comment): `resources/views/landingBuilder/front/components/features_4x`, `links_and_titles_slider_1_row` (one straight scrolling band of links; with no items set it lists every enabled course category) and `upcoming_courses`. `cvh_forums` (new) shows the community forum in the demo's layout: a centred white card over a dotted primary-colour band, a row of recent forum members' avatars (CVH avatars fill the gaps), Explore Forums and Create a Topic. `cvh_partners` shows all partner logos together in one "Official Organizations" panel. `database/cvh/24_homepage_like_original.php` adds the missing sections, orders them like the demo and sets their headings.
 
 ## Live class metrics (Google Meet)
 
