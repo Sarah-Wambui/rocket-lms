@@ -1,7 +1,9 @@
+@if(empty($singlePage)) {{-- CVH: the one-page edit form loads these once (create/index.blade.php) --}}
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/sortable/jquery-ui.min.css"/>
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
 @endpush
+@endif
 
 <div class="bg-white rounded-16 p-16 mt-32">
 
@@ -24,10 +26,20 @@
     </div>
 
 
+    @php
+        $cvhQuizzes = $webinar->quizzes;
+
+        // CVH: on the one-page form, quizzes inside a chapter are already shown in the content section
+        if (!empty($singlePage)) {
+            $cvhChapterQuizIds = $webinar->chapters->flatMap->chapterItems->where('type', \App\Models\WebinarChapterItem::$chapterQuiz)->pluck('item_id')->all();
+            $cvhQuizzes = $cvhQuizzes->whereNotIn('id', $cvhChapterQuizIds);
+        }
+    @endphp
+
     <div id="jsQuizzesAccordionsLists" class="js-quizzes-accordions-lists mt-16">
-        @if(!empty($webinar->quizzes) and count($webinar->quizzes))
+        @if(count($cvhQuizzes))
             <ul class="draggable-content-lists quizzes-draggable-lists" data-path="" data-drag-class="quizzes-draggable-lists">
-                @foreach($webinar->quizzes as $quizInfo)
+                @foreach($cvhQuizzes as $quizInfo)
                     @include('design_1.panel.webinars.create.includes.accordions.quiz',['quizInfo' => $quizInfo])
                 @endforeach
             </ul>
@@ -44,11 +56,14 @@
 
 </div>
 
+@if(empty($singlePage)) {{-- CVH: on the one-page form the content section already has this template --}}
 <div id="newQuizForm" class="d-none">
     @include('design_1.panel.webinars.create.includes.accordions.quiz',['webinar' => $webinar, 'quizInfo' => null, 'webinarChapterPages' => true])
 </div>
+@endif
 
 
+@if(empty($singlePage)) {{-- CVH: the one-page edit form loads these once (create/index.blade.php) --}}
 @push('scripts_bottom')
     <script>
         var newChapterLang = '{{ trans('public.new_chapter') }}';
@@ -69,3 +84,4 @@
 
     <script src="/assets/design_1/js/panel/quiz_create.min.js"></script>
 @endpush
+@endif

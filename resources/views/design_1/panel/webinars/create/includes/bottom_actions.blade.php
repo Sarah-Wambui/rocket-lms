@@ -1,7 +1,9 @@
 <div class="position-fixed position-bottom-0 position-left-0 position-right-0 z-index-3 bg-white soft-shadow-2">
     <div class="container d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between py-16">
 
-        <div class="d-flex align-items-center">
+        {{-- CVH: the one-page edit form has no previous/next steps --}}
+        <div class="{{ !empty($singlePage) ? 'd-none' : 'd-flex' }} align-items-center">
+            @if(empty($singlePage))
             {{-- Previous --}}
             <a href="{{ (!empty($webinar) and $currentStep > 1) ? ("/panel/courses/{$webinar->id}/step/" . ($currentStep - 1)) : '#!' }}" class="d-flex-center size-48 rounded-circle bg-gray-100">
                 @svg("iconsax-lin-arrow-left", ['height' => 16, 'width' => 16, 'class' => (!empty($webinar) and $currentStep > 1) ? 'text-primary' : 'text-gray-500'])
@@ -11,10 +13,11 @@
             <div id="getNextStep" class="d-flex-center size-48 rounded-circle bg-gray-100 ml-16 cursor-pointer">
                 @svg("iconsax-lin-arrow-right", ['height' => 16, 'width' => 16, 'class' => ($currentStep < $stepCount) ? 'text-primary' : 'text-gray-500'])
             </div>
+            @endif
 
         </div>
 
-        <div class="d-flex align-items-center mt-20 mt-lg-0 gap-8">
+        <div class="d-flex align-items-center {{ !empty($singlePage) ? 'ml-lg-auto' : '' }} mt-20 mt-lg-0 gap-8">
             {{-- Save as Draft --}}
             <button type="button" id="saveAsDraft" class=" btn btn-transparent text-gray-500">{{ trans('public.save_as_draft') }}</button>
 
@@ -36,11 +39,13 @@
         </div>
     </div>
 
-    @php
-        $stepProgressPercent = (($currentStep * 100) / $stepCount);
-    @endphp
+    @if(empty($singlePage))
+        @php
+            $stepProgressPercent = (($currentStep * 100) / $stepCount);
+        @endphp
 
-    <div class="create-course-bottom-progress">
-        <div class="create-course-bottom-progress__process" style="width: {{ $stepProgressPercent }}%"></div>
-    </div>
+        <div class="create-course-bottom-progress">
+            <div class="create-course-bottom-progress__process" style="width: {{ $stepProgressPercent }}%"></div>
+        </div>
+    @endif
 </div>

@@ -153,7 +153,7 @@ class WebinarController extends Controller
 
         $url = '/panel/courses';
         if ($data['get_next'] == 1) {
-            $url = '/panel/courses/' . $webinar->id . '/step/2';
+            $url = '/panel/courses/' . $webinar->id . '/edit'; // CVH: the one-page edit form
         }
 
         return redirect($url);
@@ -161,6 +161,7 @@ class WebinarController extends Controller
 
     public function edit(Request $request, $id, $step = 1)
     {
+        // CVH: the whole course is edited on one page, like the admin edit page; every old /step/N link opens it
         $this->authorize("panel_webinars_create");
 
         $user = auth()->user();
@@ -171,23 +172,7 @@ class WebinarController extends Controller
         }
         $locale = $request->get('locale', app()->getLocale());
 
-        $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 8 : 7;
-
-        if ($step > $stepCount) {
-            return redirect("/panel/courses/{$id}/step/{$stepCount}");
-        }
-
-        $data = [
-            'pageTitle' => trans('webinars.new_page_title_step', ['step' => $step]),
-            'currentStep' => $step,
-            'isOrganization' => $isOrganization,
-            'userLanguages' => getUserLanguagesLists(),
-            'locale' => mb_strtolower($locale),
-            'defaultLocale' => getDefaultLocale(),
-            'stepCount' => $stepCount
-        ];
-
-        $query = Webinar::where('id', $id)
+        $webinar = Webinar::where('id', $id)
             ->where(function ($query) use ($user) {
                 $query->where(function ($query) use ($user) {
                     $query->where('creator_id', $user->id)
@@ -195,14 +180,10 @@ class WebinarController extends Controller
                 });
 
                 $query->orWhereHas('webinarPartnerTeacher', function ($query) use ($user) {
-
+                    $query->where('teacher_id', $user->id);
                 });
-            });
-
-        if ($step == '1') {
-            $data['teachers'] = $user->getOrganizationTeachers()->get();
-        } elseif ($step == 2) {
-            $query->with([
+            })
+            ->with([
                 'category' => function ($query) {
                     $query->with(['filters' => function ($query) {
                         $query->with('options');
@@ -215,21 +196,9 @@ class WebinarController extends Controller
                     }]);
                 },
                 'tags',
-            ]);
-
-            $categories = Category::where('parent_id', null)
-                ->with('subCategories')
-                ->get();
-
-            $data['categories'] = $categories;
-        } elseif ($step == 3) {
-            $query->with([
                 'tickets' => function ($query) {
                     $query->orderBy('order', 'asc');
                 },
-            ]);
-        } elseif ($step == 4) {
-            $query->with([
                 'chapters' => function ($query) {
                     $query->orderBy('order', 'asc');
                     $query->with([
@@ -248,81 +217,55 @@ class WebinarController extends Controller
                         }
                     ]);
                 },
-            ]);
-        } elseif ($step == 5) {
-            $query->with([
                 'prerequisites' => function ($query) {
                     $query->with(['course' => function ($qu) {
                         $qu->with(['teacher' => function ($q) {
                             $q->select('id', 'full_name');
                         }]);
                     }])->orderBy('order', 'asc');
-                }
-            ]);
-        } elseif ($step == 6) {
-            $query->with([
+                },
                 'faqs' => function ($query) {
                     $query->orderBy('order', 'asc');
                 },
                 'webinarExtraDescription' => function ($query) {
                     $query->orderBy('order', 'asc');
-                }
-            ]);
-        } elseif ($step == 7) {
-            $query->with([
+                },
                 'quizzes',
-                'chapters' => function ($query) {
-                    $query->where('status', WebinarChapter::$chapterActive)
-                        ->orderBy('order', 'asc');
-                }
-            ]);
-
-            $teacherQuizzes = Quiz::where('webinar_id', null)
-                ->where('creator_id', $user->id)
-                ->whereNull('webinar_id')
-                ->get();
-
-            $data['teacherQuizzes'] = $teacherQuizzes;
-        }
-
-
-        $webinar = $query->first();
+            ])
+            ->first();
 
         if (empty($webinar)) {
             abort(404);
         }
 
-        $data['webinar'] = $webinar;
+        $webinarCategoryFilters = !empty($webinar->category) ? $webinar->category->filters : [];
 
-        $data['pageTitle'] = trans('public.edit') . ' ' . $webinar->title;
+        if (empty($webinar->category) and !empty($request->old('category_id'))) {
+            $category = Category::where('id', $request->old('category_id'))->first();
 
-        $definedLanguage = [];
-        if ($webinar->translations) {
-            $definedLanguage = $webinar->translations->pluck('locale')->toArray();
-        }
-
-        $data['definedLanguage'] = $definedLanguage;
-
-        if ($step == 2) {
-            $data['webinarTags'] = $webinar->tags->pluck('title')->toArray();
-
-            $webinarCategoryFilters = !empty($webinar->category) ? $webinar->category->filters : [];
-
-            if (empty($webinar->category) and !empty($request->old('category_id'))) {
-                $category = Category::where('id', $request->old('category_id'))->first();
-
-                if (!empty($category)) {
-                    $webinarCategoryFilters = $category->filters;
-                }
+            if (!empty($category)) {
+                $webinarCategoryFilters = $category->filters;
             }
-
-            $data['webinarCategoryFilters'] = $webinarCategoryFilters;
         }
 
-        if ($step == 3) {
-            $data['sumTicketsCapacities'] = $webinar->tickets->sum('capacity');
-        }
-
+        $data = [
+            'pageTitle' => trans('public.edit') . ' ' . $webinar->title,
+            'singlePage' => true,
+            'currentStep' => 'all',
+            'stepCount' => empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 8 : 7,
+            'isOrganization' => $isOrganization,
+            'userLanguages' => getUserLanguagesLists(),
+            'locale' => mb_strtolower($locale),
+            'defaultLocale' => getDefaultLocale(),
+            'webinar' => $webinar,
+            'definedLanguage' => $webinar->translations ? $webinar->translations->pluck('locale')->toArray() : [],
+            'teachers' => $user->getOrganizationTeachers()->get(),
+            'categories' => Category::where('parent_id', null)->with('subCategories')->get(),
+            'webinarTags' => $webinar->tags->pluck('title')->toArray(),
+            'webinarCategoryFilters' => $webinarCategoryFilters,
+            'sumTicketsCapacities' => $webinar->tickets->sum('capacity'),
+            'teacherQuizzes' => Quiz::where('webinar_id', null)->where('creator_id', $user->id)->get(),
+        ];
 
         return view('design_1.panel.webinars.create.index', $data);
     }
@@ -343,6 +286,9 @@ class WebinarController extends Controller
         $getStep = $data['get_step'];
         $getNextStep = (!empty($data['get_next']) and $data['get_next'] == 1);
         $isDraft = (!empty($data['draft']) and $data['draft'] == 1);
+        // CVH: the one-page edit form sends current_step=all and is saved as every step at once
+        $singlePage = ($currentStep == 'all');
+        $onStep = fn($step) => ($singlePage or $currentStep == $step);
 
         $webinar = Webinar::where('id', $id)
             ->where(function ($query) use ($user) {
@@ -360,8 +306,8 @@ class WebinarController extends Controller
             abort(404);
         }
 
-        if ($currentStep == 1) {
-            $rules = [
+        if ($onStep(1)) {
+            $rules += [
                 'type' => 'required|in:webinar,course,text_lesson',
                 'title' => 'required|max:255',
                 'summary' => 'required',
@@ -369,8 +315,8 @@ class WebinarController extends Controller
             ];
         }
 
-        if ($currentStep == 2) {
-            $rules = [
+        if ($onStep(2)) {
+            $rules += [
                 'category_id' => 'required',
                 'duration' => 'required|numeric',
                 'partners' => 'required_if:partner_instructor,on',
@@ -382,8 +328,8 @@ class WebinarController extends Controller
             }
         }
 
-        if ($currentStep == 3) {
-            $rules = [
+        if ($onStep(3)) {
+            $rules += [
                 'price' => 'nullable|numeric|min:0',
             ];
         }
@@ -404,7 +350,7 @@ class WebinarController extends Controller
         $data['status'] = $status;
         $data['updated_at'] = time();
 
-        if ($currentStep == 1) {
+        if ($onStep(1)) {
             $data['private'] = (!empty($data['private']) and $data['private'] == 'on');
 
             // Handle Image and Video
@@ -420,7 +366,7 @@ class WebinarController extends Controller
             );
         }
 
-        if ($currentStep == 2) {
+        if ($onStep(2)) {
 
             // Check Capacity
             $userPackage = new UserPackage($webinar->creator);
@@ -460,13 +406,13 @@ class WebinarController extends Controller
             }
         }
 
-        if ($currentStep == 3) {
+        if ($onStep(3)) {
             $data['subscribe'] = !empty($data['subscribe']) ? true : false;
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
             $data['organization_price'] = !empty($data['organization_price']) ? convertPriceToDefaultCurrency($data['organization_price']) : null;
         }
 
-        if ($currentStep == 6) {
+        if ($onStep(6)) {
             $webinarExtraDescriptionController = (new WebinarExtraDescriptionController());
             $webinarExtraDescriptionController->storeCompanyLogos($request, 'webinar_id', $webinar->id, 'webinars');
         }
@@ -505,7 +451,7 @@ class WebinarController extends Controller
             }
         }
 
-        if ($webinar and $currentStep == 1) {
+        if ($webinar and $onStep(1)) {
             WebinarTranslation::updateOrCreate([
                 'webinar_id' => $webinar->id,
                 'locale' => mb_strtolower($data['locale']),
@@ -540,7 +486,9 @@ class WebinarController extends Controller
         $stepCount = empty(getGeneralOptionsSettings('direct_publication_of_courses')) ? 8 : 7;
 
         $url = '/panel/courses';
-        if ($getNextStep) {
+        if ($singlePage and $isDraft) {
+            $url = '/panel/courses/' . $webinar->id . '/edit';
+        } elseif ($getNextStep) {
             $nextStep = (!empty($getStep) and $getStep > 0) ? $getStep : $currentStep + 1;
 
             $url = '/panel/courses/' . $webinar->id . '/step/' . (($nextStep <= $stepCount) ? $nextStep : $stepCount);

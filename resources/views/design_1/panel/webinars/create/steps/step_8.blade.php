@@ -1,6 +1,8 @@
+@if(empty($singlePage)) {{-- CVH: the one-page edit form loads these once (create/index.blade.php) --}}
 @push('styles_top')
 
 @endpush
+@endif
 
 <div class="bg-white rounded-16 p-16 mt-32">
     <h3 class="font-14 font-weight-bold">{{ trans('public.message_to_reviewer') }}</h3>
@@ -39,6 +41,8 @@
     @endif
 </div>
 
+@if(empty($singlePage)) {{-- CVH: the one-page edit form loads these once (create/index.blade.php) --}}
 @push('scripts_bottom')
 
 @endpush
+@endif
