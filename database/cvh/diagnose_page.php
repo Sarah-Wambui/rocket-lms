@@ -2,9 +2,11 @@
 /**
  * CVH Africa — find out why a page is slow or runs out of memory: opens the page as a given user (with a high memory
  * limit) and prints its status, peak memory, number of database queries and the queries repeated most often.
- * Changes nothing.
+ * Changes nothing (the login-session check is skipped, so the user is not logged out).
+ * "latest" in the path is replaced by the id of the user's most recently updated course.
  *
  *   php -d memory_limit=2G database/cvh/diagnose_page.php /panel/courses 1056
+ *   php -d memory_limit=2G database/cvh/diagnose_page.php /panel/courses/latest/step/4 1056
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -12,15 +14,29 @@ $app = require __DIR__ . '/../../bootstrap/app.php';
 
 [$path, $userId] = [$argv[1] ?? '/panel/courses', (int)($argv[2] ?? 0)];
 
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-$request = Illuminate\Http\Request::create($path, 'GET');
-$app->instance('request', $request);
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+// the login-session check would see no real login, log the user out and redirect
+$app->instance(App\Http\Middleware\SessionValidity::class, new class {
+    public function handle($request, $next) { return $next($request); }
+});
 
 $user = App\User::find($userId);
 if (!$user) {
     exit("No user {$userId}\n");
 }
+
+if (str_contains($path, 'latest')) {
+    $latest = App\Models\Webinar::query()->where(fn($q) => $q->where('creator_id', $user->id)->orWhere('teacher_id', $user->id))->orderByDesc('updated_at')->first();
+    if (!$latest) {
+        exit("User {$userId} has no courses\n");
+    }
+    $path = str_replace('latest', $latest->id, $path);
+    printf("Latest course: %d %s\n", $latest->id, $latest->title);
+}
+
+$request = Illuminate\Http\Request::create($path, 'GET');
 printf("Code: %s\nUser %d: %s (%s)\nPage: %s\n\n", trim((string)shell_exec('git log --oneline -1')), $user->id, $user->full_name, $user->role_name, $path);
 
 Illuminate\Support\Facades\DB::enableQueryLog();
