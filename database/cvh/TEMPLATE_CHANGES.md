@@ -109,3 +109,4 @@ New: `app/Support/CvhMeetMetrics.php`, `app/Console/Commands/CvhMeetMetrics.php`
 | File | Change |
 |---|---|
 | `app/Models/Webinar.php` | `getAverageLearning()` is cached for 10 minutes per course (`cvh_average_learning_{id}`); the original calculation is now `calculateAverageLearning()`. It worked out every student's progress one by one and the instructor course cards (`/panel/courses`) call it twice per course, which ran out of memory. Marked `CVH:`. |
+| `app/Http/Controllers/Panel/MyCoursesController.php` | Top stats: sales totals are summed in the database instead of loading every sale with its course. Course cards: each course's sales are fetched as plain `id, amount` rows (the cards only show the count and the sum) instead of full Sale models. Both ran out of memory on `/panel/courses` after the old-site import. Marked `CVH:`. |

@@ -97,20 +97,18 @@ class MyCoursesController extends Controller
         $totalLiveCoursesSalesAmount = 0;
         $totalCoursesSalesAmount = 0;
 
-        $webinarSales = Sale::where('seller_id', $user->id)
-            ->where('type', 'webinar')
-            ->whereNotNull('webinar_id')
-            ->whereNull('refund_at')
-            ->with('webinar')
-            ->get();
+        // CVH: summed in the database instead of loading every sale with its course (ran out of memory with the imported sales)
+        $webinarSales = Sale::query()->toBase()
+            ->leftJoin('webinars', 'webinars.id', '=', 'sales.webinar_id')
+            ->where('sales.seller_id', $user->id)
+            ->where('sales.type', 'webinar')
+            ->whereNotNull('sales.webinar_id')
+            ->whereNull('sales.refund_at')
+            ->selectRaw("coalesce(sum(sales.amount), 0) as total, coalesce(sum(case when webinars.type = 'webinar' then sales.amount else 0 end), 0) as live")
+            ->first();
 
-        foreach ($webinarSales as $webinarSale) {
-            if (!empty($webinarSale->webinar) and $webinarSale->webinar->type == 'webinar') {
-                $totalLiveCoursesSalesAmount += $webinarSale->amount;
-            }
-
-            $totalCoursesSalesAmount += $webinarSale->amount;
-        }
+        $totalCoursesSalesAmount = (float)$webinarSales->total;
+        $totalLiveCoursesSalesAmount = (float)$webinarSales->live;
 
         return [
             'totalCoursesCount' => $totalCoursesCount,
@@ -163,7 +161,7 @@ class MyCoursesController extends Controller
                     $query->orWhereIn('gift_id', $giftsIds);
                 })
                 ->whereNull('refund_at')
-                ->get();
+                ->toBase()->get(['id', 'amount']); // CVH: only what the cards show (count and amount), not full Sale models
 
             $course->sales = $sales;
         }
