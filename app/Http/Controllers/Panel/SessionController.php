@@ -224,7 +224,7 @@ class SessionController extends Controller
                     'chapter_id' => $data['chapter_id'],
                     'date' => $sessionDate,
                     'duration' => $data['duration'] ?? $session->duration,
-                    'link' => $data['link'] ?? $session->link,
+                    'link' => (!empty($data['link']) and !str_contains($data['link'], "/sessions/{$session->id}/join")) ? $data['link'] : $session->link, // CVH: never the site's own join address (it would redirect forever)
                     'session_api' => $session_api,
                     'api_secret' => $data['api_secret'] ?? $session->api_secret,
                     'status' => (!empty($data['status']) and $data['status'] == 'on') ? Session::$Active : Session::$Inactive,
@@ -371,6 +371,27 @@ class SessionController extends Controller
 
 
                 $link = $session->link;
+
+                // CVH: a link pointing back to this join page (saved from the edit form's link box) would redirect forever
+                if (empty($link) or str_contains($link, "/sessions/{$session->id}/join")) {
+                    $link = null;
+                    if ($session->session_api == 'google_meet') {
+                        try {
+                            $session->update(['link' => null]);
+                            \App\Support\CvhGoogleMeet::sync($session);
+                            $link = $session->link;
+                        } catch (\Throwable $exception) {
+                            \Log::warning("CVH: Meet link for session {$session->id}: " . $exception->getMessage());
+                        }
+                    }
+                    if (empty($link)) {
+                        return back()->with(['toast' => [
+                            'title' => trans('public.request_failed'),
+                            'msg' => 'This live session has no meeting link yet. Edit the session, check its provider and link, and save it again.',
+                            'status' => 'error',
+                        ]]);
+                    }
+                }
 
                 if ($session->session_api == 'big_blue_button') {
                     $link = url('panel/sessions/' . $session->id . '/join/toBigBlueButton');

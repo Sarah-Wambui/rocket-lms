@@ -212,7 +212,8 @@ class CvhGoogleMeet
 
             if ($response->status() !== 404 && $response->status() !== 410) {
                 self::check($response, 'update');
-                if (empty($session->link) && $response->json('hangoutLink')) {
+                // CVH: also replace a link that isn't a Meet (e.g. the site's own join address saved from the edit form)
+                if (!str_starts_with((string)$session->link, 'https://meet.google.com/') && $response->json('hangoutLink')) {
                     DB::table('sessions')->where('id', $session->id)->update(['link' => $response->json('hangoutLink')]);
                     $session->link = $response->json('hangoutLink');
                 }

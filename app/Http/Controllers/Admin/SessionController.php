@@ -223,7 +223,7 @@ class SessionController extends Controller
                     'date' => $sessionDate,
                     'duration' => $data['duration'] ?? $session->duration,
                     'extra_time_to_join' => $data['extra_time_to_join'] ?? null,
-                    'link' => $data['link'] ?? $session->link,
+                    'link' => (!empty($data['link']) and !str_contains($data['link'], "/sessions/{$session->id}/join")) ? $data['link'] : $session->link, // CVH: never the site's own join address (it would redirect forever)
                     'session_api' => $session_api,
                     'api_secret' => $data['api_secret'] ?? $session->api_secret,
                     'status' => (!empty($data['status']) and $data['status'] == 'on') ? Session::$Active : Session::$Inactive,
