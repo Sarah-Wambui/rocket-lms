@@ -793,6 +793,13 @@ class Webinar extends Model implements TranslatableContract
 
     public function getAverageLearning()
     {
+        // CVH: works out every student's progress one by one (thousands of queries on courses with many students), and
+        // the instructor course cards call it twice per course, so /panel/courses ran out of memory; keep it for 10 minutes
+        return \Illuminate\Support\Facades\Cache::remember("cvh_average_learning_{$this->id}", 600, fn() => $this->calculateAverageLearning());
+    }
+
+    private function calculateAverageLearning()
+    {
         $percent = 0;
 
         $studentsIds = $this->getStudentsIds();

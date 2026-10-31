@@ -103,3 +103,9 @@ No template file changed. New front views for components this template version s
 | `resources/views/admin/includes/sidebar/education.blade.php` | **Live Class Metrics** menu item. Marked `{{-- CVH: ... --}}`. |
 
 New: `app/Support/CvhMeetMetrics.php`, `app/Console/Commands/CvhMeetMetrics.php` (`php artisan cvh:meet-metrics [--session=ID]`), `app/Http/Controllers/Admin/CvhMeetMetricsAdminController.php`, views `admin/cvh_meet_metrics`, tables from `database/cvh/26_meet_metrics.php`.
+
+## Performance
+
+| File | Change |
+|---|---|
+| `app/Models/Webinar.php` | `getAverageLearning()` is cached for 10 minutes per course (`cvh_average_learning_{id}`); the original calculation is now `calculateAverageLearning()`. It worked out every student's progress one by one and the instructor course cards (`/panel/courses`) call it twice per course, which ran out of memory. Marked `CVH:`. |
