@@ -40,6 +40,11 @@ class PanelAuthenticate
             return $next($request);
         }
 
+        // CVH: admins may join a live session (e.g. to host and record it); the rest of the panel stays for users
+        if (auth()->check() and $request->is('panel/sessions/*/join')) {
+            return $next($request);
+        }
+
         return redirect('/login');
     }
 

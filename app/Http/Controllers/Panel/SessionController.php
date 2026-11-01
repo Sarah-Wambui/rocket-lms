@@ -420,7 +420,7 @@ class SessionController extends Controller
         $canAccess = false;
         $isModerator = false;
 
-        if ($user->id == $session->creator_id) {
+        if ($user->id == $session->creator_id or $user->isAdmin()) { // CVH: admins join as hosts, like the instructor
             $canAccess = true;
             $isModerator = true;
         } else if (!empty($session->reserve_meeting_id)) {
