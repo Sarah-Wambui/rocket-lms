@@ -14,10 +14,10 @@ return [
     'signature_image' => null,   // e.g. '/store/cvh/certificate/signature.png' (transparent PNG)
     'stamp_image' => null,       // e.g. '/store/cvh/certificate/stamp.png'
 
-    // Optional small partner/funder logos along the bottom edge (e.g. EU emblem, HD4A, INNOECOFOOD)
+    // Optional small partner/funder logos along the bottom edge (e.g. EU emblem). HD4A only: INNOECOFOOD courses get
+    // their own logo from 'programs' below, so the two never share a certificate.
     'footer_logos' => [
         '/store/cvh/files/HD4A logo.png',
-        '/store/cvh/files/Innoecofood Logo Original.png',
     ],
 
     /*
