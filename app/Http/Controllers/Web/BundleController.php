@@ -83,7 +83,7 @@ class BundleController extends Controller
 
         if (!empty($has_discount)) {
 
-            if (!empty($withDiscount) and $withDiscount == 'on') {
+            if ($has_discount == 'on') { // CVH: was the undefined $withDiscount, so the filter never applied
                 $now = time();
                 $webinarIdsHasDiscount = [];
 
@@ -112,21 +112,25 @@ class BundleController extends Controller
             }
         }
 
-        if (!empty($type) and count($type)) {
-            $query->whereHas('webinar', function (Builder $query) use ($type) {
+        // CVH: Bundle has no "webinar" relation (every type / More Options filter was a 500); filter on the bundle's
+        // courses, and on columns/relations that exist (there are no include_quizzes / assignments columns).
+        if (!empty($type) and is_array($type)) {
+            $query->whereHas('bundleWebinars.webinar', function (Builder $query) use ($type) {
                 $query->whereIn('type', $type);
             });
         }
 
-        if (!empty($moreOptions) and count($moreOptions)) {
-            $query->whereHas('webinar', function (Builder $query) use ($moreOptions) {
+        if (!empty($moreOptions) and is_array($moreOptions)) {
+            $query->whereHas('bundleWebinars.webinar', function (Builder $query) use ($moreOptions) {
 
                 if (in_array('supported_courses', $moreOptions)) {
                     $query->where('support', true);
                 }
 
                 if (in_array('quiz_included', $moreOptions)) {
-                    $query->where('include_quizzes', true);
+                    $query->whereHas('quizzes', function ($query) {
+                        $query->where('status', 'active');
+                    });
                 }
 
                 if (in_array('certificate_included', $moreOptions)) {
@@ -134,7 +138,7 @@ class BundleController extends Controller
                 }
 
                 if (in_array('assignment_included', $moreOptions)) {
-                    $query->where('assignments', true);
+                    $query->whereHas('assignments');
                 }
 
                 if (in_array('course_forum_included', $moreOptions)) {
@@ -142,7 +146,7 @@ class BundleController extends Controller
                 }
 
                 if (in_array('point_courses', $moreOptions)) {
-                    $query->where('points', true);
+                    $query->where('points', '>', 0);
                 }
             });
         }

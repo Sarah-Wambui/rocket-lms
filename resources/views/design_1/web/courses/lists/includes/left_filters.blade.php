@@ -25,6 +25,39 @@
             </div>
         </div>
 
+        {{-- CVH: Projects (bundles) and Themes (categories; not on a category's own page) --}}
+        @php
+            $cvhFilterGroups = [
+                'projects' => ['title' => 'Project', 'items' => \App\Models\Bundle::query()->where('status', 'active')->where('private', false)->orderBy('created_at')->get()],
+                'themes' => ['title' => 'Theme', 'items' => empty($category) ? \App\Models\Category::query()->whereNull('parent_id')->where('enable', true)->orderBy('order')->get() : collect()],
+            ];
+        @endphp
+
+        @foreach($cvhFilterGroups as $cvhName => $cvhGroup)
+            @if($cvhGroup['items']->isNotEmpty())
+                <div class="accordion card-before-line card-before-line__4-12 p-16 border-bottom-gray-100">
+                    <div class="accordion__title d-flex align-items-center justify-content-between">
+                        <div class="font-14 font-weight-bold text-dark cursor-pointer" href="#leftFilters_{{ $cvhName }}" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
+                            {{ $cvhGroup['title'] }}
+                        </div>
+
+                        <span class="collapse-arrow-icon d-flex cursor-pointer" href="#leftFilters_{{ $cvhName }}" data-parent="#leftFiltersAccordion" role="button" data-toggle="collapse">
+                            <x-iconsax-lin-arrow-up-1 class="icons text-gray-500" width="16"/>
+                        </span>
+                    </div>
+
+                    <div id="leftFilters_{{ $cvhName }}" class="accordion__collapse show pt-0 mt-0 border-0" role="tabpanel">
+                        @foreach($cvhGroup['items'] as $cvhItem)
+                            <div class="custom-control custom-checkbox {{ $loop->first ? 'mt-16' : 'mt-12' }}">
+                                <input type="checkbox" name="{{ $cvhName }}[]" value="{{ $cvhItem->id }}" id="filter_{{ $cvhName }}_{{ $cvhItem->id }}" class="custom-control-input" @if(in_array($cvhItem->id, (array)request()->get($cvhName, []))) checked @endif>
+                                <label class="custom-control__label cursor-pointer" for="filter_{{ $cvhName }}_{{ $cvhItem->id }}">{{ $cvhItem->title }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        @endforeach
+
         {{-- Category Filters And Options --}}
         @if(!empty($category) and !empty($category->filters))
             @foreach($category->filters as $filter)

@@ -483,8 +483,16 @@ class UserProfileController extends Controller
                     'message' => trans('site.you_have_message_from', ['email' => $data['email']]) . "\n" . $data['description'],
                 ];
 
+                // CVH: imported instructors have placeholder addresses (...@instructors.cvh.local) until CVH sends the
+                // real ones; their messages go to the site e-mail (Settings -> General) so they are not lost.
+                $recipient = $user->email;
+                if (str_ends_with(mb_strtolower($recipient), '.local')) {
+                    $recipient = getGeneralSettings('site_email') ?: env('MAIL_FROM_ADDRESS');
+                    $mail['title'] = '[For ' . (User::where('id', $user->id)->value('full_name')) . '] ' . $mail['title'];
+                }
+
                 try {
-                    \Mail::to($user->email)->send(new \App\Mail\SendNotifications($mail));
+                    \Mail::to($recipient)->send(new \App\Mail\SendNotifications($mail));
 
                     return response()->json([
                         'code' => 200,

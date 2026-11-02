@@ -230,6 +230,20 @@ class User extends Authenticatable
 
     public function getUsername()
     {
+        // CVH: users imported straight into the database (old site, TrainerCentral) have no username, so their
+        // profile links were "/users//profile". Give them one, the same way creating() does.
+        if (empty($this->username) and $this->exists and !empty($this->id)) {
+            $named = (object)['full_name' => $this->full_name ?? self::query()->where('id', $this->id)->value('full_name')];
+            $username = self::makeUsernameString($named);
+
+            if (self::checkDuplicateUsername($username)) {
+                $username = self::makeUsernameString($named, 8);
+            }
+
+            self::query()->where('id', $this->id)->whereNull('username')->update(['username' => $username]);
+            $this->username = self::query()->where('id', $this->id)->value('username');
+        }
+
         return $this->username;
     }
 

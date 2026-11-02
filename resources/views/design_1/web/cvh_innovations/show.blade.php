@@ -51,6 +51,17 @@
                             @if(!empty($innovator->summary))
                                 <p class="font-16 text-gray-500 mt-16">{{ $innovator->summary }}</p>
                             @endif
+
+                            {{-- Investors and partners reach the innovator through CVH (the site e-mail, Settings -> General) --}}
+                            @php
+                                $cvhContactEmail = getGeneralSettings('site_email');
+                            @endphp
+                            @if(!empty($cvhContactEmail))
+                                <a href="mailto:{{ $cvhContactEmail }}?subject={{ rawurlencode('Interest in ' . $innovator->business . ' (' . $innovator->name . ')') }}" class="btn btn-primary btn-lg mt-24">
+                                    <x-iconsax-lin-sms width="18px" height="18px"/>
+                                    <span class="ml-4">Contact CVH about this innovation</span>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>

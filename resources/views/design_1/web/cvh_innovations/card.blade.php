@@ -1,5 +1,5 @@
-{{-- The innovator and their innovation together on the listing; nothing opens another page. A full story (from the Innovator of the Month posts) unfolds in place. --}}
-<div class="cvh-innov-card d-flex flex-column h-100">
+{{-- The innovator and their innovation together on the listing; the card opens the innovation's details page (/innovations/{slug}). --}}
+<a href="/innovations/{{ $innovator->slug }}" class="cvh-innov-card d-flex flex-column h-100 text-decoration-none">
     <div class="cvh-innov-card__image">
         <img src="{{ $innovator->photo }}" alt="{{ $innovator->name }}" loading="lazy">
         <span class="cvh-innov-badge">Cohort {{ $innovator->cohort }}</span>
@@ -23,15 +23,13 @@
             <span class="d-block font-14 font-weight-bold text-primary mt-2">{{ $innovator->business }}</span>
         </div>
 
-        @if(!empty($innovator->profile_html))
-            @if(!empty($innovator->summary))
-                <p class="font-14 text-gray-500 mt-12">{{ $innovator->summary }}</p>
-            @endif
-
-            <details class="cvh-innov-card__story mt-12">
-                <summary class="font-14 font-weight-bold text-primary">Read the full story</summary>
-                <div class="cvh-innov-profile__content font-14 text-gray-500 mt-8">{!! $innovator->profile_html !!}</div>
-            </details>
+        @if(!empty($innovator->summary))
+            <p class="font-14 text-gray-500 mt-12">{{ $innovator->summary }}</p>
         @endif
+
+        <span class="d-inline-flex align-items-center gap-4 font-14 font-weight-bold text-primary mt-auto pt-12">
+            View innovation details
+            <x-iconsax-lin-arrow-right width="16px" height="16px"/>
+        </span>
     </div>
-</div>
+</a>

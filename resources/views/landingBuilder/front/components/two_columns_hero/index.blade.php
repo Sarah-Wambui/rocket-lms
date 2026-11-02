@@ -14,9 +14,22 @@
         <div class="container h-100">
             <div class="row h-100 flex-column-reverse flex-lg-row">
                 <div class="col-12 col-lg-5 two-columns-hero-section__content">
+                    {{-- CVH: the upper badge shows the next live class (date, start–end time, host) and opens its course page, where
+                         enrolled learners Join and find the materials. With no live class coming up it shows the text set in the editor. --}}
+                    @php
+                        $cvhNextSession = \App\Support\CvhNextLiveSession::find();
+                        if (!empty($cvhNextSession)) {
+                            $contents['upper_cta'] = array_merge($contents['upper_cta'] ?? [], [
+                                'badge_text' => \App\Support\CvhNextLiveSession::isLive($cvhNextSession) ? 'Live now' : 'Next live class',
+                                'main_text' => $cvhNextSession->title ?: $cvhNextSession->webinar->title,
+                                'url' => $cvhNextSession->webinar->getUrl(),
+                            ]);
+                        }
+                    @endphp
+
                     {{-- Upper Call to Action --}}
                     @if(!empty($contents['upper_cta']) and (!empty($contents['upper_cta']['badge_text']) or !empty($contents['upper_cta']['main_text'])))
-                        <a href="{{ !empty($contents['upper_cta']['url']) ? $contents['upper_cta']['url'] : '' }}" target="_blank" class="">
+                        <a href="{{ !empty($contents['upper_cta']['url']) ? $contents['upper_cta']['url'] : '' }}" @if(empty($cvhNextSession)) target="_blank" @endif class="">
                             <div class="d-inline-flex align-items-center gap-8 p-8 pr-16 rounded-32 border-2 border-dark">
                                 @if(!empty($contents['upper_cta']['badge_text']))
                                     <div class="d-flex-center gap-4 p-6 pr-10 rounded-16 bg-primary">
@@ -35,6 +48,22 @@
                                 <x-iconsax-lin-arrow-right class="icons text-dark" width="16px" height="16px"/>
                             </div>
                         </a>
+
+                        @if(!empty($cvhNextSession))
+                            <div class="d-flex flex-wrap align-items-center gap-12 mt-8 font-14 text-gray-500">
+                                <span class="d-inline-flex align-items-center gap-4">
+                                    <x-iconsax-lin-calendar-2 class="icons text-gray-500" width="16px" height="16px"/>
+                                    {{ \App\Support\CvhNextLiveSession::timeRange($cvhNextSession) }}
+                                </span>
+
+                                @if(!empty($cvhNextSession->webinar->teacher))
+                                    <a href="{{ $cvhNextSession->webinar->teacher->getProfileUrl() }}" class="d-inline-flex align-items-center gap-4 text-gray-500">
+                                        <x-iconsax-lin-user class="icons text-gray-500" width="16px" height="16px"/>
+                                        Host: {{ $cvhNextSession->webinar->teacher->full_name }}
+                                    </a>
+                                @endif
+                            </div>
+                        @endif
                     @endif
 
                     {{-- Title --}}

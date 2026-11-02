@@ -157,6 +157,32 @@ class CvhCertificatesController extends Controller
         ]);
     }
 
+    /**
+     * The learner's current name and the course's / quiz's current title. They were stored when the certificate was
+     * first downloaded and never changed, so a name corrected in Dashboard > Settings (or a renamed course) still
+     * printed the old one. The stored row is updated too, so the verify page shows the same. The issue date stays.
+     */
+    private function withCurrentDetails($certificate)
+    {
+        $current = [
+            'student_name' => trim((string)DB::table('users')->where('id', $certificate->user_id)->value('full_name')),
+            'course_title' => (string)Webinar::query()->find($certificate->webinar_id)?->title,
+        ];
+        if (!empty($certificate->quiz_id)) {
+            $current['quiz_title'] = (string)\App\Models\Quiz::query()->find($certificate->quiz_id)?->title;
+        }
+
+        $changes = array_filter($current, fn($value, $column) => $value !== '' and $value !== ($certificate->{$column} ?? null), ARRAY_FILTER_USE_BOTH);
+        if ($changes) {
+            DB::table('cvh_certificates')->where('id', $certificate->id)->update($changes);
+            foreach ($changes as $column => $value) {
+                $certificate->{$column} = $value;
+            }
+        }
+
+        return $certificate;
+    }
+
     /** The certificate settings for the course's programme (config cvh_certificate.programs), HD4A by default. */
     private function configFor($webinarId): array
     {
@@ -186,6 +212,7 @@ class CvhCertificatesController extends Controller
 
     private function pdf($certificate)
     {
+        $certificate = $this->withCurrentDetails($certificate);
         $config = $this->configFor($certificate->webinar_id);
         $verifyUrl = rtrim(config('app.url'), '/') . '/certificates/verify?code=' . urlencode($certificate->code);
         $qrSvg = (string)QrCode::format('svg')->size(220)->margin(0)->generate($verifyUrl);

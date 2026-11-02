@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bundle;
+use App\Models\BundleWebinar;
+use App\Models\Category;
 use App\Models\SpecialOffer;
 use App\Models\Ticket;
 use App\Models\Webinar;
@@ -109,6 +111,17 @@ class ClassesController extends Controller
 
             if (!empty($typeOptions) and is_array($typeOptions)) {
                 $query->whereIn("{$this->tableName}.type", $typeOptions);
+            }
+
+            // CVH: filter by project (the courses of a bundle) and by theme (category, with its sub-categories)
+            $projects = array_filter((array)$request->get('projects', []), 'is_numeric');
+            if (!empty($projects)) {
+                $query->whereIn("{$this->tableName}.id", BundleWebinar::query()->whereIn('bundle_id', $projects)->select('webinar_id'));
+            }
+
+            $themes = array_filter((array)$request->get('themes', []), 'is_numeric');
+            if (!empty($themes)) {
+                $query->whereIn("{$this->tableName}.category_id", Category::query()->whereIn('id', $themes)->orWhereIn('parent_id', $themes)->select('id'));
             }
 
             if (!empty($moreOptions) and is_array($moreOptions)) {
