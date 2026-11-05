@@ -64,6 +64,13 @@ New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionContr
 | `app/Console/Commands/CvhRunReminders.php` (new) | `php artisan cvh:reminders`, run hourly from cron: live-class, meeting and subscription reminders every N hours (N = Admin → Settings → General → Reminders), subscription renewal daily. Installments/gifts/events/abandoned carts are not scheduled. |
 | `app/Http/Controllers/Web/CronJobsController.php` | `index()`: the public `/cron-jobs/{method}` URLs (open to anyone, could call `testSMS`, `makeUsersTableUsername`) now need `?key=` = `CRON_JOBS_KEY` from `.env` and never run those two. Marked `CVH:`. |
 
+## Projects (bundles) wording and logos
+
+| File | Change |
+|---|---|
+| `lang/en/update.php`, `lang/en/admin/main.php` | "Course Bundle(s)" -> "Project Course(s)" everywhere (bundles page heading, breadcrumb, tab title, panel and admin labels); bundles page subtitle "Explore the project courses and start learning." |
+| `public/store/cvh/courses/bundle-hd4a-logo.jpg`, `bundle-innoecofood-logo.jpg` (new) | Project logos from hd4a.eu and innoecofood.eu on white, 978x678. Set as the bundle card thumbnails by `database/cvh/35_project_logos.php`; cover photos unchanged. |
+
 ## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
 
 Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.

@@ -1272,7 +1272,7 @@ return [
 
     'full_advertising_banner' => 'Advertising Position #1',
     'half_advertising_banner' => 'Advertising Position #2',
-    'latest_bundles' => 'Course Bundles',
+    'latest_bundles' => 'Project Courses',
     'store_products' => 'Store (Marketplace)',
     'become_instructor' => 'Instructor Registration',
     'forum_section' => 'Forum',
