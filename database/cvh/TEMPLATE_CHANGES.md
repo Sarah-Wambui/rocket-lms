@@ -78,6 +78,10 @@ New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionContr
 | `app/Models/Webinar.php` | `getImage()` / `getImageCover()`: a course with no image shows `/store/cvh/courses/live-session.jpg` (cover: `live-session_cover.jpg`) instead of a broken `<img src="">`. Marked `CVH:`. |
 | `public/store/cvh/courses/mentorship-session.jpg` (new) | Shared HD4A mentorship cover (copy of the Session 6 TrainerCentral cover). `database/cvh/36_mentorship_covers.php` sets it on mentorship sessions whose image is empty or missing (Kick-Off, Sessions 2, 3, 5, 8). |
 
+## Header buttons (data only)
+
+`database/cvh/37_fix_create_course_button.php`: the instructor/organization header button "Create a new course" (`navbar_button_translations`, all locales) pointed at `/panel/webinars/new`, an old Rocket LMS address that is "Page Not Found" in v2.2. Now `/panel/courses/new`.
+
 ## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
 
 Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.
