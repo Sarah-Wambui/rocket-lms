@@ -71,6 +71,13 @@ New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionContr
 | `lang/en/update.php`, `lang/en/admin/main.php` | "Course Bundle(s)" -> "Project Course(s)" everywhere (bundles page heading, breadcrumb, tab title, panel and admin labels); bundles page subtitle "Explore the project courses and start learning." |
 | `public/store/cvh/courses/bundle-hd4a-logo.jpg`, `bundle-innoecofood-logo.jpg` (new) | Project logos from hd4a.eu and innoecofood.eu on white, 978x678. Set as the bundle card thumbnails by `database/cvh/35_project_logos.php`; cover photos unchanged. |
 
+## Course images
+
+| File | Change |
+|---|---|
+| `app/Models/Webinar.php` | `getImage()` / `getImageCover()`: a course with no image shows `/store/cvh/courses/live-session.jpg` (cover: `live-session_cover.jpg`) instead of a broken `<img src="">`. Marked `CVH:`. |
+| `public/store/cvh/courses/mentorship-session.jpg` (new) | Shared HD4A mentorship cover (copy of the Session 6 TrainerCentral cover). `database/cvh/36_mentorship_covers.php` sets it on mentorship sessions whose image is empty or missing (Kick-Off, Sessions 2, 3, 5, 8). |
+
 ## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
 
 Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.

@@ -870,14 +870,18 @@ class Webinar extends Model implements TranslatableContract
         }
     }
 
+    // CVH: courses saved without an image (e.g. TrainerCentral sessions that had no cover) show a CVH photo instead of a broken image
+    public const CVH_DEFAULT_IMAGE = '/store/cvh/courses/live-session.jpg';
+    public const CVH_DEFAULT_IMAGE_COVER = '/store/cvh/courses/live-session_cover.jpg';
+
     public function getImageCover()
     {
-        return $this->image_cover;
+        return !empty($this->image_cover) ? $this->image_cover : (!empty($this->thumbnail) ? $this->thumbnail : self::CVH_DEFAULT_IMAGE_COVER);
     }
 
     public function getImage()
     {
-        return $this->thumbnail;
+        return !empty($this->thumbnail) ? $this->thumbnail : self::CVH_DEFAULT_IMAGE;
     }
 
     public function getUrl()
