@@ -54,3 +54,14 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/admission/payment/verify', 'CvhAdmissionController@verify');
     });
 });
+
+/*
+| CVH: old Rocket LMS v1 instructor addresses (/panel/webinars/...) still linked from buttons, e-mails and bookmarks.
+| In v2.2 these pages live under /panel/courses/..., so send visitors there instead of "Page Not Found".
+*/
+Route::group(['prefix' => 'panel/webinars'], function () {
+    Route::permanentRedirect('/', '/panel/courses');
+    Route::permanentRedirect('/new', '/panel/courses/new');
+    Route::permanentRedirect('/{id}/edit', '/panel/courses/{id}/edit')->where('id', '[0-9]+');
+    Route::permanentRedirect('/{id}/step/{step?}', '/panel/courses/{id}/step/{step?}')->where(['id' => '[0-9]+', 'step' => '[0-9]+']);
+});

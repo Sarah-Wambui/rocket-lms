@@ -82,6 +82,8 @@ New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionContr
 
 `database/cvh/37_fix_create_course_button.php`: the instructor/organization header button "Create a new course" (`navbar_button_translations`, all locales) pointed at `/panel/webinars/new`, an old Rocket LMS address that is "Page Not Found" in v2.2. Now `/panel/courses/new`.
 
+`routes/cvh.php`: the old `/panel/webinars`, `/panel/webinars/new`, `/panel/webinars/{id}/edit` and `/panel/webinars/{id}/step/{step}` addresses (old buttons, e-mails, bookmarks) redirect (301) to the same pages under `/panel/courses`.
+
 ## Rebuilt admin pages (template shipped "This is a paid plugin!" placeholders)
 
 Only the top-level page views were placeholders; the controllers, routes, sub-views and JS are the template's own and untouched. Each rebuilt view starts with a `{{-- CVH: rebuilt ... --}}` comment.
