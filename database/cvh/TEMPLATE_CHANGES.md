@@ -77,6 +77,7 @@ New: `app/Support/CvhAdmission.php`, `app/Http/Controllers/Web/CvhAdmissionContr
 |---|---|
 | `app/Models/Webinar.php` | `getImage()` / `getImageCover()`: a course with no image shows `/store/cvh/courses/live-session.jpg` (cover: `live-session_cover.jpg`) instead of a broken `<img src="">`. Marked `CVH:`. |
 | `public/store/cvh/courses/mentorship-session.jpg` (new) | Shared HD4A mentorship cover (copy of the Session 6 TrainerCentral cover). `database/cvh/36_mentorship_covers.php` sets it on mentorship sessions whose image is empty or missing (Kick-Off, Sessions 2, 3, 5, 8). |
+| `database/cvh/38_fetch_old_site_files.php` (new, data only) | Downloads files that the old-site import links to under `/store/oldcvh/` but never received (course images, people's photos; with `--all` also lesson files) from `https://cvh.africa/store/`. |
 
 ## Header buttons (data only)
 
