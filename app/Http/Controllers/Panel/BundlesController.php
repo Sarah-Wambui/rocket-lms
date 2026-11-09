@@ -132,9 +132,7 @@ class BundlesController extends Controller
             abort(404);
         }
 
-        $categories = Category::where('parent_id', null)
-            ->with('subCategories')
-            ->get();
+        $categories = Category::getCategories();
 
         $teachers = null;
         $isOrganization = $user->isOrganization();
@@ -271,9 +269,7 @@ class BundlesController extends Controller
                 'tags',
             ]);
 
-            $categories = Category::where('parent_id', null)
-                ->with('subCategories')
-                ->get();
+            $categories = Category::getCategories();
 
             $data['categories'] = $categories;
         } elseif ($step == 3) {

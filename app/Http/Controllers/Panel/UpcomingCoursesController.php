@@ -236,9 +236,7 @@ class UpcomingCoursesController extends Controller
                 'tags',
             ]);
 
-            $categories = Category::where('parent_id', null)
-                ->with('subCategories')
-                ->get();
+            $categories = Category::getCategories();
 
             $data['categories'] = $categories;
         } elseif ($step == 3) {

@@ -150,3 +150,10 @@ New: `app/Support/CvhMeetMetrics.php`, `app/Console/Commands/CvhMeetMetrics.php`
 | `app/Http/Controllers/Web/UserProfileController.php` | `sendMessage()`: messages to an instructor with a placeholder e-mail (`*.local`) go to the site e-mail, titled "[For name]". Marked `CVH:`. |
 
 CVH files changed: `CvhCertificatesController` (certificates print the learner's current name and the current course/quiz title; the issue date stays), `cvh_innovations/card` and `show` (cards open the innovation's details page again; "Contact CVH about this innovation" button). Script: `database/cvh/34_instructor_profiles.php`.
+
+## Categories menu and forms
+
+| File | Change |
+|---|---|
+| `resources/views/design_1/web/theme/headers/{header_1,header_2}/includes/categories.blade.php`, `mobile/includes/main_menu/categories.blade.php` | The header menu always loads `Category::getCategories()` (enabled only). Pages passing their own `$categories` (course form, sales and noticeboard filters) used to replace the menu. Marked `CVH:`. |
+| `app/Http/Controllers/Panel/WebinarController.php`, `BundlesController.php`, `UpcomingCoursesController.php` | Create/edit forms list enabled categories only (`Category::getCategories()`), so switched-off template categories are not offered. |

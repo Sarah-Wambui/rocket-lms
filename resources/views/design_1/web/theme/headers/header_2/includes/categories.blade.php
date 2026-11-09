@@ -1,3 +1,5 @@
+{{-- CVH: always the site's enabled categories; pages that pass their own $categories (course form, sales filters) must not change this menu --}}
+@php($categories = \App\Models\Category::getCategories())
 <div class="theme-header-2__dropdown position-relative">
     <div class="d-inline-flex align-items-center gap-8 p-16 rounded-12 bg-gray-100">
         <x-iconsax-lin-category class="icons text-gray-500" width="16px" height="16px"/>

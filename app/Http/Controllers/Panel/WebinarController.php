@@ -57,9 +57,7 @@ class WebinarController extends Controller
             return redirect()->back();
         }
 
-        $categories = Category::where('parent_id', null)
-            ->with('subCategories')
-            ->get();
+        $categories = Category::getCategories();
 
         $teachers = null;
         $isOrganization = $user->isOrganization();
@@ -260,7 +258,7 @@ class WebinarController extends Controller
             'webinar' => $webinar,
             'definedLanguage' => $webinar->translations ? $webinar->translations->pluck('locale')->toArray() : [],
             'teachers' => $user->getOrganizationTeachers()->get(),
-            'categories' => Category::where('parent_id', null)->with('subCategories')->get(),
+            'categories' => Category::getCategories(),
             'webinarTags' => $webinar->tags->pluck('title')->toArray(),
             'webinarCategoryFilters' => $webinarCategoryFilters,
             'sumTicketsCapacities' => $webinar->tickets->sum('capacity'),

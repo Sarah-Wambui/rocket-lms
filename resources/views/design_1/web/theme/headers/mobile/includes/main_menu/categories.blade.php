@@ -1,3 +1,5 @@
+{{-- CVH: always the site's enabled categories; pages that pass their own $categories (course form, sales filters) must not change this menu --}}
+@php($categories = \App\Models\Category::getCategories())
 @if(!empty($categories))
     @foreach($categories as $category)
         @if(!empty($category->subCategories) and count($category->subCategories))
